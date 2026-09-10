@@ -1,0 +1,1607 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Study Ledger — The Focused CA Intermediate Study Software</title>
+  <link rel="icon" type="image/svg+xml" sizes="any"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23113325'/%3E%3Cpath d='M17 13h25a6 6 0 0 1 6 6v31H22a6 6 0 0 1-6-6V14a1 1 0 0 1 1-1Z' fill='%23fffaf0'/%3E%3Cpath d='M16 42a7 7 0 0 1 7-7h25M25 22h15M25 28h11' fill='none' stroke='%23113325' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='m27 43 5 5 10-12' fill='none' stroke='%23d49b38' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+
+  <!-- Google Fonts: Editorial Serif + Clean Sans + Tabular Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #f5f0e4;
+      --card: #fdfbf7;
+      --card-alt: #f7f3e8;
+      --ink: #19241b;
+      --ink-light: #2c382f;
+      --muted: #6b6854;
+      --muted-light: #8a8771;
+      --green: #113426;
+      --green-light: #194a37;
+      --green-glow: rgba(17, 52, 38, 0.15);
+      --green2: #2b6149;
+      --gold: #c98e2c;
+      --gold-light: #fef8eb;
+      --gold-border: #e6cb95;
+      --red: #9e3325;
+      --red-light: #faeae8;
+      --amber: #a86b16;
+      --line: #ded3b8;
+      --line-subtle: #eae1cc;
+      --soft: #ede6d3;
+      --blue: #2a556f;
+      --font-serif: 'Lora', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+      --shadow-sm: 0 2px 8px rgba(25, 36, 27, 0.04);
+      --shadow-md: 0 8px 24px rgba(25, 36, 27, 0.07), 0 2px 6px rgba(25, 36, 27, 0.03);
+      --shadow-lg: 0 16px 40px rgba(25, 36, 27, 0.10), 0 4px 12px rgba(25, 36, 27, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+      min-height: 100vh;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Refined Moleskine / Smythson Ruled Paper Texture */
+    body:before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0 31px, rgba(30, 42, 33, 0.022) 32px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      background: linear-gradient(180deg, #113426 0%, #0d281d 100%);
+      color: #f7f2e4;
+      border-bottom: 2px solid #091c14;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(9, 28, 20, 0.25);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      gap: 20px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fffaf0;
+      transition: transform 0.2s ease;
+    }
+
+    .brand-wrap:hover {
+      transform: translateY(-1px);
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-title small {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #9cbca8;
+      margin-top: 3px;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      color: #d6e0d9;
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      color: #ffffff;
+    }
+
+    .nav-link:hover::after {
+      content: "";
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .nav-auth {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      border: 1px solid var(--green);
+      background: var(--green);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn:hover {
+      background: #092117;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(17, 52, 38, 0.25);
+    }
+
+    .btn.alt {
+      background: rgba(255, 255, 255, 0.05);
+      color: #f7f2e4;
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: none;
+    }
+
+    .btn.alt:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: #fff;
+      color: #fff;
+    }
+
+    .btn.amber {
+      background: linear-gradient(135deg, #d49b38 0%, #b87719 100%);
+      border-color: #9c6312;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(184, 119, 25, 0.3);
+    }
+
+    .btn.amber:hover {
+      background: linear-gradient(135deg, #b87719 0%, #9c6312 100%);
+      box-shadow: 0 6px 20px rgba(184, 119, 25, 0.45);
+    }
+
+    .btn.large {
+      padding: 14px 30px;
+      font-size: 13.5px;
+      border-radius: 8px;
+    }
+
+    /* BADGES */
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow.green {
+      color: var(--green);
+      background: #e2ede5;
+      padding: 4px 12px;
+      border-radius: 99px;
+      border: 1px solid #b7d6c1;
+    }
+
+    .badge-gold {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: #925f0e;
+      background: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 72px 0 54px;
+      text-align: center;
+      border-bottom: 2px solid var(--line);
+      position: relative;
+    }
+
+    .hero-pretitle {
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(34px, 5.5vw, 54px);
+      font-weight: 700;
+      line-height: 1.18;
+      color: var(--ink);
+      max-width: 920px;
+      margin: 0 auto 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero h1 span.highlight {
+      color: var(--green);
+      position: relative;
+      white-space: nowrap;
+    }
+
+    .hero h1 span.highlight::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 4px;
+      width: 100%;
+      height: 8px;
+      background: rgba(201, 142, 44, 0.22);
+      z-index: -1;
+      border-radius: 2px;
+    }
+
+    .hero p.lead {
+      font-size: clamp(16.5px, 2vw, 20px);
+      color: var(--muted);
+      max-width: 760px;
+      margin: 0 auto 34px;
+      line-height: 1.6;
+    }
+
+    .pricing-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--card);
+      border: 2px dashed var(--green);
+      padding: 12px 28px;
+      border-radius: 12px;
+      margin-bottom: 34px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .hero-price-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .hero-price-original {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 600;
+      color: #8c8872;
+      text-decoration: line-through;
+      text-decoration-color: var(--red);
+      text-decoration-thickness: 2.5px;
+      opacity: 0.85;
+    }
+
+    .hero-price-num {
+      font-family: var(--font-serif);
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .hero-period {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .hero-price-sub {
+      text-align: left;
+    }
+
+    .hero-price-sub b {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .hero-price-sub span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 38px;
+    }
+
+    .trust-bar {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .trust-item svg {
+      width: 15px;
+      height: 15px;
+      color: var(--green);
+    }
+
+    /* HEADERS */
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 12px;
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .section-head span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .section-head-center {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 36px;
+    }
+
+    .section-head-center h2 {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .section-head-center span {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .section-head-center::after {
+      content: "";
+      display: block;
+      width: 50px;
+      height: 3px;
+      background: var(--green);
+      margin: 12px auto 0;
+      border-radius: 2px;
+    }
+
+    /* FEATURES GRID */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      margin-bottom: 64px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--green);
+      border-radius: 10px;
+      padding: 26px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--line);
+    }
+
+    .feature-card.amber { border-top-color: var(--amber); }
+    .feature-card.blue { border-top-color: var(--blue); }
+    .feature-card.red { border-top-color: var(--red); }
+
+    .feature-icon-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      margin-bottom: 14px;
+      font-size: 18px;
+    }
+
+    .feature-tag {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* INTERACTIVE SOFTWARE PREVIEW (THE VINTAGE DIGITAL LEDGER) */
+    .preview-section {
+      padding: 40px 0 80px;
+      margin: 0 auto;
+    }
+
+    .preview-window {
+      background: #fcf9f2;
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .preview-top-bar {
+      background: var(--green);
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      border-bottom: 1px solid #0c231a;
+    }
+
+    .preview-body {
+      padding: 28px;
+    }
+
+    .subject-box {
+      margin-bottom: 24px;
+    }
+
+    .subject-head {
+      background: linear-gradient(180deg, var(--green) 0%, #153f2f 100%);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .subject-head h4 {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+
+    .subject-head span {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.85;
+    }
+
+    .chapter-table {
+      border: 1px solid var(--line);
+      border-top: none;
+      background: var(--card);
+      border-radius: 0 0 6px 6px;
+      overflow: hidden;
+    }
+
+    .chapter-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 210px 110px;
+      align-items: center;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--soft);
+      gap: 16px;
+      font-size: 13.5px;
+      transition: background 0.15s ease;
+    }
+
+    .chapter-row:hover {
+      background: #fbf6ec;
+    }
+
+    .chapter-row:last-child {
+      border-bottom: none;
+    }
+
+    .chapter-tick {
+      width: 22px;
+      height: 22px;
+      border: 1.5px solid var(--line);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      background: #fff;
+    }
+
+    .chapter-tick.done {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+      font-weight: 700;
+    }
+
+    .chapter-title b {
+      color: var(--ink);
+      font-size: 13.5px;
+      display: block;
+    }
+
+    .chapter-title small {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .revision-schedule-pills {
+      display: flex;
+      gap: 5px;
+    }
+
+    .rev-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 7px;
+      border-radius: 4px;
+      background: #f4eedf;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .rev-pill:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .rev-pill.done {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    .rev-pill.due {
+      background: var(--amber);
+      color: #fff;
+      border-color: var(--amber);
+      animation: gentlePulse 2s infinite;
+    }
+
+    @keyframes gentlePulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      text-align: center;
+      display: inline-block;
+    }
+
+    .status-badge.done {
+      background: #e1eee4;
+      color: var(--green);
+      border: 1px solid #b5d5bf;
+    }
+
+    .status-badge.progress {
+      background: #fbf0d6;
+      color: var(--amber);
+      border: 1px solid #e1cca1;
+    }
+
+    /* PRICING */
+    .pricing-section {
+      padding: 60px 0 90px;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 28px;
+      max-width: 900px;
+      margin: 32px auto 0;
+      align-items: stretch;
+    }
+
+    .pricing-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 38px 32px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: var(--shadow-md);
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pricing-card.featured {
+      border: 2.5px solid var(--green);
+      background: #fefdfa;
+      box-shadow: 0 12px 35px rgba(17, 52, 38, 0.12);
+    }
+
+    .featured-ribbon {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--green) 0%, #1c4e3a 100%);
+      color: #fff;
+      padding: 4px 18px;
+      border-radius: 99px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 12px rgba(17, 52, 38, 0.25);
+    }
+
+    .pricing-card h3 {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+
+    .pricing-card p.plan-sub {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    .price-display {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .price-original {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 600;
+      color: #8c8872;
+      text-decoration: line-through;
+      text-decoration-color: var(--red);
+      text-decoration-thickness: 2.5px;
+      opacity: 0.85;
+      align-self: center;
+    }
+
+    .price-val {
+      font-family: var(--font-serif);
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .price-period {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .discount-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 800;
+      color: #9e2b1e;
+      background: #fbeae8;
+      border: 1px solid #f2b8b2;
+      padding: 3px 8px;
+      border-radius: 99px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
+    }
+
+    .price-note {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--muted-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .plan-features {
+      list-style: none;
+      margin: 28px 0 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 14px;
+      border-top: 1px solid var(--soft);
+      padding-top: 22px;
+      text-align: left;
+    }
+
+    .pricing-card .btn {
+      margin-top: auto;
+      width: 100%;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--ink-light);
+      line-height: 1.45;
+    }
+
+    .check-icon {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: -1px;
+    }
+
+    /* FAQ */
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 80px;
+    }
+
+    .faq-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .faq-box h4 {
+      font-family: var(--font-serif);
+      font-size: 16.5px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .faq-box p {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* FOOTER */
+    .footer {
+      background: linear-gradient(180deg, #113426 0%, #0c231a 100%);
+      color: #eee8d6;
+      padding: 44px 0;
+      margin-top: 80px;
+      border-top: 3px solid #071711;
+      font-size: 13px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    /* MODAL */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 30, 22, 0.75);
+      backdrop-filter: blur(4px);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      z-index: 200;
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .modalbox {
+      background: var(--card);
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      padding: 32px;
+      width: min(500px, 100%);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+
+    .modalbox h3 {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .close-modal-btn {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 26px;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    .close-modal-btn:hover {
+      color: var(--ink);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+      .faq-grid {
+        grid-template-columns: 1fr;
+      }
+      .chapter-row {
+        grid-template-columns: 28px 1fr auto;
+      }
+      .chapter-row> :nth-child(4) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .nav-menu {
+        display: none;
+      }
+      .hero h1 {
+        font-size: 32px;
+      }
+      .pricing-hero-badge {
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+      }
+      .hero-price-sub {
+        text-align: center;
+      }
+      .trust-bar {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="container nav-inner">
+      <a href="dashboard.html" class="brand-wrap">
+        <svg class="brand-icon" viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="14" fill="#fffaf0" />
+          <path d="M17 13h25a6 6 0 0 1 6 6v31H22a6 6 0 0 1-6-6V14a1 1 0 0 1 1-1Z" fill="#113426" />
+          <path d="M16 42a7 7 0 0 1 7-7h32M25 22h15M25 28h11" fill="none" stroke="#113426" stroke-width="3"
+            stroke-linecap="round" />
+          <path d="m27 43 5 5 10-12" fill="none" stroke="#d49b38" stroke-width="4" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        <div class="brand-title">
+          The Study Ledger
+          <small>CA Intermediate Software</small>
+        </div>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#preview" class="nav-link">Software Tour</a>
+        <a href="#pricing" class="nav-link">Pricing (₹39/pm)</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <div class="nav-auth" id="authSection">
+        <a href="login.html" class="btn alt">Login</a>
+        <a href="signup.html" class="btn amber">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-pretitle">
+        <span class="eyebrow green">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          ICAI New Scheme 2026 Compliant
+        </span>
+      </div>
+
+      <h1>Master All 6 Subjects with the <span class="highlight">Scientific 7-Interval</span> Study Ledger</h1>
+
+      <p class="lead">
+        Eliminate revision anxiety, forgotten sections, and backlog chaos. A purpose-built desktop study software
+        engineered specifically to lock in your CA Intermediate syllabus retention.
+      </p>
+
+      <div class="pricing-hero-badge">
+        <div class="hero-price-wrap">
+          <span class="hero-price-original">₹99</span>
+          <span class="hero-price-num">₹39</span>
+          <span class="hero-period">/ pm</span>
+        </div>
+        <div class="hero-price-sub">
+          <b>Monthly Unlimited Access <span class="discount-pill">60% OFF</span></b>
+          <span>All 6 Papers · Cancel Anytime</span>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a href="payment.html?plan=monthly" class="btn large amber">
+          Get Instant Access — ₹39/pm
+        </a>
+        <a href="#preview" class="btn alt large" style="color: var(--green); border-color: var(--green); background: #fff;">
+          Take Interactive Tour →
+        </a>
+      </div>
+
+      <div class="trust-bar">
+        <div class="trust-item">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+          <span>All 6 ICAI Papers Preloaded</span>
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+          <span>Day 1 to 90 Spaced Repetition</span>
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+          <span>Runs Smoothly In Any Browser</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="container" style="padding-top: 60px;">
+    <div class="section-head">
+      <h2>Everything Built Into The Software</h2>
+      <span>Engineered for CA Intermediate Distinction</span>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-badge">📑</div>
+        <span class="feature-tag">ICAI New Syllabus</span>
+        <h3>6-Subject Complete Syllabus Ledger</h3>
+        <p>
+          Preloaded with all chapters, modules, and Accounting Standards for Group 1 (Adv. Accounts, Law, Tax) and
+          Group 2 (Costing, Audit, FM & SM). No manual setup required.
+        </p>
+      </div>
+
+      <div class="feature-card amber">
+        <div class="feature-icon-badge">🧠</div>
+        <span class="feature-tag">Memory Science</span>
+        <h3>7-Interval Spaced Repetition</h3>
+        <p>
+          Built upon cognitive neuroscience. The software automatically queues your revisions at Day 1, 3, 7, 14, 30, 60,
+          and 90 so you never forget tricky section numbers or standards.
+        </p>
+      </div>
+
+      <div class="feature-card blue">
+        <div class="feature-icon-badge">⏱️</div>
+        <span class="feature-tag">Focus & Discipline</span>
+        <h3>Deep Study Pomodoro Clock</h3>
+        <p>
+          Integrated study timer with 25m, 45m, 60m, and 90m focus presets. Accurately measures and logs real hours
+          invested per subject every single day.
+        </p>
+      </div>
+
+      <div class="feature-card blue">
+        <div class="feature-icon-badge">📈</div>
+        <span class="feature-tag">Performance Intel</span>
+        <h3>Mock Test Scorecard & Analytics</h3>
+        <p>
+          Log your mock test marks, monitor your average percentage against the 40% / 50% passing threshold, and get
+          automatic warnings on your weakest subjects.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-badge">🔥</div>
+        <span class="feature-tag">Consistency Engine</span>
+        <h3>30-Day Activity Heatmap</h3>
+        <p>
+          Visual GitHub-style streak heatmap that logs every completed revision and study session. Watch your daily
+          discipline turn into exam-day confidence.
+        </p>
+      </div>
+
+      <div class="feature-card red">
+        <div class="feature-icon-badge">💾</div>
+        <span class="feature-tag">Safe & Private</span>
+        <h3>1-Click Backup & Cloud Sync</h3>
+        <p>
+          Export your complete ledger data with a single click, import on any laptop, and keep your progress synced to your
+          secure student account.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE SOFTWARE PREVIEW -->
+  <section id="preview" class="container preview-section">
+    <div class="section-head-center">
+      <h2>Interactive Software Tour</h2>
+      <span>Try clicking checkboxes and revision interval pills below</span>
+    </div>
+
+    <div class="preview-window">
+      <div class="preview-top-bar">
+        <span>THE STUDY LEDGER — LIVE ENGINE SIMULATION</span>
+        <span style="color: #a8d5ba;">● ONLINE & SYNCED</span>
+      </div>
+
+      <div class="preview-body">
+        <div class="subject-box">
+          <div class="subject-head">
+            <h4>Paper 1: Advanced Accounting</h4>
+            <span>15 Accounting Standards & Corporate Statements</span>
+          </div>
+
+          <div class="chapter-table">
+            <div class="chapter-row">
+              <div class="chapter-tick done" onclick="toggleTick(this)">✓</div>
+              <div class="chapter-title">
+                <b>AS 10: Property, Plant and Equipment</b>
+                <small>Depreciation Methods, Component Accounting & Revaluation</small>
+              </div>
+              <div class="revision-schedule-pills">
+                <span class="rev-pill done" onclick="togglePill(this)">R1</span>
+                <span class="rev-pill done" onclick="togglePill(this)">R2</span>
+                <span class="rev-pill done" onclick="togglePill(this)">R3</span>
+                <span class="rev-pill due" onclick="togglePill(this)" title="Due Today for 14-day revision">R4</span>
+                <span class="rev-pill" onclick="togglePill(this)">R5</span>
+                <span class="rev-pill" onclick="togglePill(this)">R6</span>
+              </div>
+              <div>
+                <span class="status-badge progress">Due Today</span>
+              </div>
+            </div>
+
+            <div class="chapter-row">
+              <div class="chapter-tick done" onclick="toggleTick(this)">✓</div>
+              <div class="chapter-title">
+                <b>AS 14: Accounting for Amalgamations</b>
+                <small>Purchase Method, Pooling of Interests & Statutory Reserves</small>
+              </div>
+              <div class="revision-schedule-pills">
+                <span class="rev-pill done" onclick="togglePill(this)">R1</span>
+                <span class="rev-pill done" onclick="togglePill(this)">R2</span>
+                <span class="rev-pill done" onclick="togglePill(this)">R3</span>
+                <span class="rev-pill done" onclick="togglePill(this)">R4</span>
+                <span class="rev-pill done" onclick="togglePill(this)">R5</span>
+                <span class="rev-pill" onclick="togglePill(this)">R6</span>
+              </div>
+              <div>
+                <span class="status-badge done">Mastered ✓</span>
+              </div>
+            </div>
+
+            <div class="chapter-row">
+              <div class="chapter-tick" onclick="toggleTick(this)"></div>
+              <div class="chapter-title">
+                <b>Financial Statements of Companies (Schedule III)</b>
+                <small>Division I Balance Sheet, Statement of Profit & Loss and Disclosures</small>
+              </div>
+              <div class="revision-schedule-pills">
+                <span class="rev-pill done" onclick="togglePill(this)">R1</span>
+                <span class="rev-pill" onclick="togglePill(this)">R2</span>
+                <span class="rev-pill" onclick="togglePill(this)">R3</span>
+                <span class="rev-pill" onclick="togglePill(this)">R4</span>
+                <span class="rev-pill" onclick="togglePill(this)">R5</span>
+                <span class="rev-pill" onclick="togglePill(this)">R6</span>
+              </div>
+              <div>
+                <span class="status-badge progress">In Progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="payment.html?plan=monthly" class="btn large" style="background: var(--green);">
+            <span>🔒</span> Get Instant Access — ₹39/pm
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="container pricing-section">
+    <div class="section-head-center">
+      <h2>Affordable & Honest Pricing</h2>
+      <span>Less than a cup of coffee to guarantee your exam readiness</span>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- MONTHLY PASS (FEATURED: ₹39/pm) -->
+      <div class="pricing-card featured">
+        <div class="featured-ribbon">Special Offer · 60% Off</div>
+        <h3>Monthly Pass</h3>
+        <p class="plan-sub">Total flexibility with full access to all software features.</p>
+
+        <div class="price-display">
+          <span class="price-original">₹99</span>
+          <span class="price-val">₹39</span>
+          <span class="price-period">/ pm</span>
+          <span class="discount-pill">60% OFF</span>
+        </div>
+        <div class="price-note">Billed monthly · Cancel anytime with 1 click</div>
+
+        <ul class="plan-features">
+          <li><span class="check-icon">✓</span> Complete 6-Subject CA Intermediate Tracker</li>
+          <li><span class="check-icon">✓</span> 7-Interval Spaced Repetition Engine</li>
+          <li><span class="check-icon">✓</span> Built-in Deep Study Pomodoro Timer</li>
+          <li><span class="check-icon">✓</span> Mock Test Score & Passing Ratio Analytics</li>
+          <li><span class="check-icon">✓</span> 30-Day Consistency Heatmap</li>
+          <li><span class="check-icon">✓</span> Cloud Backup & Local JSON Export</li>
+        </ul>
+
+        <a href="payment.html?plan=monthly" class="btn large amber">
+          Subscribe Now — ₹39/pm
+        </a>
+      </div>
+
+      <!-- ANNUAL PASS -->
+      <div class="pricing-card">
+        <h3>Annual Exam Pass</h3>
+        <p class="plan-sub">Ideal for students preparing for both May & Nov 2026 attempts.</p>
+
+        <div class="price-display">
+          <span class="price-original">₹899</span>
+          <span class="price-val">₹299</span>
+          <span class="price-period">/ year</span>
+          <span class="discount-pill">67% OFF</span>
+        </div>
+        <div class="price-note" style="color: var(--amber); font-weight: 700;">Full 12 Months · Save ₹600</div>
+
+        <ul class="plan-features">
+          <li><span class="check-icon">✓</span> Everything in Monthly Pass included</li>
+          <li><span class="check-icon">✓</span> Full 12 Months Uninterrupted Access</li>
+          <li><span class="check-icon">✓</span> Covers both May & November 2026 exams</li>
+          <li><span class="check-icon">✓</span> Free updates for ICAI syllabus amendments</li>
+          <li><span class="check-icon">✓</span> Priority ledger data recovery support</li>
+        </ul>
+
+        <a href="payment.html?plan=annual" class="btn large alt" style="color: var(--green); border-color: var(--green); background: #fff;">
+          Get Annual Pass — ₹299/yr
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="container">
+    <div class="section-head">
+      <h2>Frequently Asked Questions</h2>
+      <span>Answers to common questions</span>
+    </div>
+
+    <div class="faq-grid">
+      <div class="faq-box">
+        <h4>How do I access the software after paying ₹39?</h4>
+        <p>
+          Once you complete registration and subscription, your account is immediately activated. You can log in from any
+          device and your study ledger will load directly with all data securely stored.
+        </p>
+      </div>
+
+      <div class="faq-box">
+        <h4>Does this include video lectures or coaching?</h4>
+        <p>
+          No. This is a dedicated productivity and revision software engine designed specifically for CA Intermediate. It
+          replaces physical notebooks and chaotic spreadsheets so you never miss a revision cycle.
+        </p>
+      </div>
+
+      <div class="faq-box">
+        <h4>What if I switch between my laptop and mobile?</h4>
+        <p>
+          Your data can be exported as a JSON backup file at any time and imported on any device. Cloud sync also keeps
+          your study data connected to your user account.
+        </p>
+      </div>
+
+      <div class="faq-box">
+        <h4>Can I cancel my subscription anytime?</h4>
+        <p>
+          Yes, there are zero commitments. You can cancel your ₹39 monthly subscription anytime with a single click.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBSCRIPTION MODAL -->
+  <div class="modal hidden" id="subModal">
+    <div class="modalbox">
+      <button class="close-modal-btn" onclick="closeSubscribeModal()">×</button>
+      <h3 id="modalPlanTitle">Activate Software Access</h3>
+      <p style="font-size: 14px; color: var(--muted); margin-bottom: 20px;" id="modalPlanDesc">
+        Get complete access to all 6 subjects and the 7-interval revision engine.
+      </p>
+
+      <div style="background: #fbf1d8; border: 1.5px solid #d5c18e; padding: 14px 18px; border-radius: 8px; margin-bottom: 22px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div><b>Selected License:</b> <span id="modalPlanName">Monthly Pass</span></div>
+        <div id="modalPlanCost" style="display: flex; align-items: baseline; gap: 6px;">
+          <span class="price-original" style="font-size: 16px;">₹99</span>
+          <span style="font-weight: 700; color: var(--green); font-size: 18px;">₹39 / pm</span>
+          <span class="discount-pill">60% OFF</span>
+        </div>
+      </div>
+
+      <div id="modalAuthNotice" style="margin-bottom: 20px; font-size: 13.5px; line-height: 1.5;">
+        <!-- Filled by JS -->
+      </div>
+
+      <button class="btn large amber" style="width: 100%;" id="confirmSubBtn" onclick="processSubscription()">
+        Activate Access & Open Software
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: 2fr 1fr 1.5fr; gap: 32px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px;">
+        <!-- COL 1: BRAND & MERCHANT -->
+        <div>
+          <div style="font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: #fffaf0; margin-bottom: 6px;">
+            The Study Ledger — CA Intermediate
+          </div>
+          <p style="font-size: 13px; color: #a9c0b2; margin-bottom: 12px; line-height: 1.5;">
+            The specialized spaced-repetition study software engineered for Chartered Accountancy intermediate students.
+          </p>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: #9bbca7;">
+            <b>Merchant:</b> KUNDAN TRADING COMPANY<br>
+            <b>Operational Address:</b> Bhopal, Madhya Pradesh, India — 462022<br>
+            <b>Support Email:</b> <a href="mailto:harshity16@gmail.com" style="color: #e5ede7; text-decoration: underline;">harshity16@gmail.com</a>
+          </div>
+        </div>
+
+        <!-- COL 2: QUICK ACCESS -->
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; color: #d49b38; letter-spacing: 0.8px; margin-bottom: 12px;">
+            Quick Links
+          </div>
+          <ul style="list-style: none; font-family: var(--font-mono); font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <li><a href="dashboard.html" style="color: #c9ded0; text-decoration: none;">Home & Features</a></li>
+            <li><a href="payment.html?plan=monthly" style="color: #c9ded0; text-decoration: none;">Monthly Pass (₹39/pm)</a></li>
+            <li><a href="payment.html?plan=annual" style="color: #c9ded0; text-decoration: none;">Annual Exam Pass (₹299)</a></li>
+            <li><a href="login.html" style="color: #c9ded0; text-decoration: none;">Student Login</a></li>
+            <li><a href="signup.html" style="color: #c9ded0; text-decoration: none;">Student Registration</a></li>
+          </ul>
+        </div>
+
+        <!-- COL 3: LEGAL POLICIES (RAZORPAY COMPLIANCE) -->
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; color: #d49b38; letter-spacing: 0.8px; margin-bottom: 12px;">
+            Policies & Legal
+          </div>
+          <ul style="list-style: none; font-family: var(--font-mono); font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <li><a href="return.html" style="color: #c9ded0; text-decoration: none;">Return Policy</a></li>
+            <li><a href="refund.html" style="color: #c9ded0; text-decoration: none;">Refund Policy</a></li>
+            <li><a href="privacy.html" style="color: #c9ded0; text-decoration: none;">Privacy Policy</a></li>
+            <li><a href="disclaimer.html" style="color: #c9ded0; text-decoration: none;">Disclaimer</a></li>
+            <li><a href="about.html" style="color: #c9ded0; text-decoration: none;">About & Contact</a></li>
+            <li><a href="terms.html" style="color: #c9ded0; text-decoration: none;">Terms & Conditions</a></li>
+            <li><a href="shipping.html" style="color: #c9ded0; text-decoration: none;">Shipping & Delivery</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 11.5px; color: #8ba896;">
+        <div>© 2026 The Study Ledger (KUNDAN TRADING COMPANY). All rights reserved.</div>
+        <div style="display: flex; gap: 14px; align-items: center; font-family: var(--font-mono);">
+          <span>🔒 256-Bit SSL Encrypted</span>
+          <span>⚡ Instant Digital Delivery</span>
+          <span>💳 Razorpay & NPCI UPI Verified</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    "use strict";
+
+    function checkUser() {
+      const token = localStorage.getItem("token");
+      let user = null;
+      try {
+        user = JSON.parse(localStorage.getItem("user"));
+      } catch (e) {}
+
+      const authSec = document.getElementById("authSection");
+      const license = localStorage.getItem("software_license");
+      let isPaid = false;
+      try {
+        const parsed = JSON.parse(license);
+        if (parsed && (parsed.status === "active" || parsed.plan)) isPaid = true;
+      } catch (e) {}
+
+      if (token && user) {
+        if (isPaid) {
+          authSec.innerHTML = `
+            <span style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: #a9c0b2;">
+              Hi, ${user.name ? user.name.split(" ")[0] : "Student"}
+            </span>
+            <a href="index.html" class="btn amber" style="padding: 8px 14px; font-size: 11px;">Open Software →</a>
+            <button onclick="logoutNow()" class="btn alt" style="padding: 6px 10px; font-size: 10px;">Logout</button>
+          `;
+        } else {
+          authSec.innerHTML = `
+            <span style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: #a9c0b2;">
+              Hi, ${user.name ? user.name.split(" ")[0] : "Student"}
+            </span>
+            <a href="payment.html?plan=monthly" class="btn amber" style="padding: 8px 14px; font-size: 11px;">Subscribe (₹39/pm) →</a>
+            <button onclick="logoutNow()" class="btn alt" style="padding: 6px 10px; font-size: 10px;">Logout</button>
+          `;
+        }
+      } else {
+        authSec.innerHTML = `
+          <a href="login.html" class="btn alt">Login</a>
+          <a href="signup.html" class="btn amber">Sign Up</a>
+        `;
+      }
+    }
+
+    window.logoutNow = function() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      checkUser();
+    };
+
+    window.toggleTick = function(el) {
+      if (el.classList.contains("done")) {
+        el.classList.remove("done");
+        el.textContent = "";
+      } else {
+        el.classList.add("done");
+        el.textContent = "✓";
+      }
+    };
+
+    window.togglePill = function(el) {
+      if (el.classList.contains("done")) {
+        el.classList.remove("done");
+        el.classList.add("due");
+      } else if (el.classList.contains("due")) {
+        el.classList.remove("due");
+      } else {
+        el.classList.add("done");
+      }
+    };
+
+    let selectedPlan = "monthly";
+
+    window.openSubscribeModal = function(plan) {
+      selectedPlan = plan;
+      const modal = document.getElementById("subModal");
+      const nameEl = document.getElementById("modalPlanName");
+      const costEl = document.getElementById("modalPlanCost");
+      const descEl = document.getElementById("modalPlanDesc");
+      const authNotice = document.getElementById("modalAuthNotice");
+
+      if (plan === "annual") {
+        nameEl.textContent = "Annual Exam Pass";
+        costEl.innerHTML = '<span class="price-original" style="font-size: 15px; margin-right: 6px;">₹899</span><span style="font-weight: 700; color: var(--green); font-size: 18px;">₹299 / year</span><span class="discount-pill" style="margin-left: 6px;">67% OFF</span>';
+        descEl.textContent = "Full 12-month access covering both May and Nov 2026 CA Intermediate exam attempts for only ₹299.";
+      } else {
+        nameEl.textContent = "Monthly Pass";
+        costEl.innerHTML = '<span class="price-original" style="font-size: 15px; margin-right: 6px;">₹99</span><span style="font-weight: 700; color: var(--green); font-size: 18px;">₹39 / pm</span><span class="discount-pill" style="margin-left: 6px;">60% OFF</span>';
+        descEl.textContent = "Full access to all 6 subjects and the 7-interval revision engine for just ₹39/pm (discounted from ₹99).";
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        authNotice.innerHTML = `
+          <p style="color: var(--red); margin-bottom: 8px;"><b>Note:</b> You are not logged in.</p>
+          <p>Please <a href="login.html" style="color: var(--green); font-weight: bold; text-decoration: underline;">Login</a> or <a href="signup.html" style="color: var(--green); font-weight: bold; text-decoration: underline;">Sign Up</a> first to link your software license to your account.</p>
+        `;
+        document.getElementById("confirmSubBtn").textContent = "Proceed to Payment Gateway";
+      } else {
+        authNotice.innerHTML = `
+          <p style="color: var(--green); font-weight: 600;">✓ Logged in as student. Fast-track checkout enabled.</p>
+        `;
+        document.getElementById("confirmSubBtn").textContent = "Proceed to Payment Gateway";
+      }
+
+      modal.classList.remove("hidden");
+    };
+
+    window.closeSubscribeModal = function() {
+      document.getElementById("subModal").classList.add("hidden");
+    };
+
+    window.processSubscription = function() {
+      window.location.href = "payment.html?plan=" + selectedPlan;
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      checkUser();
+    });
+  </script>
+</body>
+
+</html>

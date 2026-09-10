@@ -1,0 +1,3336 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Study Ledger — CA Intermediate</title>
+
+  <!-- STRICT SUBSCRIPTION PAYWALL: PAYMENT REQUIRED FOR ACCESS -->
+  <script>
+    (function () {
+      try {
+        const licRaw = localStorage.getItem("software_license");
+        let isLicensed = false;
+        if (licRaw) {
+          const lic = JSON.parse(licRaw);
+          if (lic && (lic.status === "active" || lic.plan)) {
+            if (lic.expiresAt && new Date() > new Date(lic.expiresAt)) {
+              isLicensed = false;
+            } else {
+              isLicensed = true;
+            }
+          }
+        }
+        if (!isLicensed) {
+          window.location.replace("payment.html?plan=monthly&notice=paywall_required");
+        }
+      } catch (e) {
+        window.location.replace("payment.html?plan=monthly&notice=paywall_required");
+      }
+    })();
+  </script>
+  <link rel="icon" type="image/svg+xml" sizes="any"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23183f30'/%3E%3Cpath d='M17 13h25a6 6 0 0 1 6 6v31H22a6 6 0 0 1-6-6V14a1 1 0 0 1 1-1Z' fill='%23fffaf0'/%3E%3Cpath d='M16 42a7 7 0 0 1 7-7h25M25 22h15M25 28h11' fill='none' stroke='%23183f30' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='m27 43 5 5 10-12' fill='none' stroke='%23d39a35' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f0e4;
+      --card: #fdfbf7;
+      --ink: #19241b;
+      --muted: #6b6854;
+      --green: #113426;
+      --green2: #2b6149;
+      --red: #9e3325;
+      --amber: #a86b16;
+      --gold: #c98e2c;
+      --line: #ded3b8;
+      --soft: #ede6d3;
+      --blue: #2a556f;
+      --font-serif: 'Lora', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body:before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0 31px, rgba(30, 42, 33, 0.022) 32px);
+      pointer-events: none;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .side {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 250px;
+      overflow: auto;
+      background: linear-gradient(180deg, #113426 0%, #0d281d 100%);
+      color: #f7f2e4;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      z-index: 9;
+      border-right: 2px solid #091c14;
+      box-shadow: 2px 0 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .brand {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    .brand small {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      color: #9cbca8;
+      margin-top: 4px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 5px;
+      margin-top: 22px;
+    }
+
+    .nav button {
+      border: 0;
+      background: none;
+      color: #d6e0d8;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      background: #fdfbf7;
+      color: var(--green);
+      font-weight: 700;
+      transform: translateX(2px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .nav i {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      opacity: 0.65;
+      margin-right: 8px;
+      font-style: normal;
+    }
+
+    .side h5 {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #8eaa9a;
+      margin: 24px 8px 10px;
+    }
+
+    .mini {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 9px;
+      border-left: 2px solid #547565;
+      color: #c9d6ce;
+      font-size: 10px;
+    }
+
+    .side-actions {
+      margin-top: auto;
+      padding-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .side-actions button,
+    .link {
+      border: 1px solid #527764;
+      background: none;
+      color: #e1e8e2;
+      border-radius: 4px;
+      padding: 7px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .link {
+      width: 100%;
+      margin-top: 7px;
+    }
+
+    .save-note {
+      font:
+        9px ui-monospace,
+        monospace;
+      color: #9eb3a6;
+      line-height: 1.4;
+      margin: 8px 2px;
+    }
+
+    .main {
+      margin-left: 250px;
+      padding: 28px 34px 60px;
+      width: calc(100% - 250px);
+      max-width: 1500px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--ink);
+    }
+
+    .sub {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .date {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--green);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(17, 52, 38, 0.2);
+    }
+
+    .grid {
+      display: grid;
+      gap: 15px;
+    }
+
+    .stats {
+      grid-template-columns: repeat(5, 1fr);
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 16px rgba(25, 36, 27, 0.05), 0 1px 3px rgba(25, 36, 27, 0.03);
+    }
+
+    .stat b {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+    }
+
+    .stat strong {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--green);
+      margin: 4px 0;
+      line-height: 1.1;
+    }
+
+    .stat small {
+      font-family: var(--font-mono);
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .today {
+      grid-template-columns: 1fr 1fr 1.3fr;
+      margin-bottom: 18px;
+    }
+
+    .task {
+      min-height: 225px;
+      display: flex;
+      flex-direction: column;
+      border-top: 5px solid var(--blue);
+    }
+
+    .task.tax {
+      border-top-color: var(--amber);
+    }
+
+    .task.deep {
+      border-top-color: var(--green);
+    }
+
+    .eyebrow {
+      font:
+        700 9px ui-monospace,
+        monospace;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .task h3 {
+      font:
+        700 18px Georgia,
+        serif;
+      line-height: 1.25;
+      margin: 10px 0 5px;
+    }
+
+    .meta {
+      font:
+        10px ui-monospace,
+        monospace;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .target {
+      font:
+        10px ui-monospace,
+        monospace;
+      color: var(--green);
+      margin: 10px 0;
+    }
+
+    .actions {
+      margin-top: auto;
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--green);
+      background: var(--green);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 6px rgba(17, 52, 38, 0.15);
+    }
+
+    .btn:hover {
+      background: #092117;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(17, 52, 38, 0.25);
+    }
+
+    .btn.alt {
+      background: transparent;
+      color: var(--green);
+    }
+
+    .btn.red {
+      background: var(--red);
+      border-color: #76291f;
+    }
+
+    .btn.amber {
+      background: var(--amber);
+      border-color: #794d0f;
+    }
+
+    .btn.small {
+      padding: 5px 8px;
+      font-size: 9.5px;
+    }
+
+    .two {
+      grid-template-columns: 1.35fr 1fr;
+      margin-bottom: 18px;
+    }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 7px;
+      margin-bottom: 11px;
+    }
+
+    .head h2 {
+      font:
+        700 17px Georgia,
+        serif;
+      margin: 0;
+    }
+
+    .head span {
+      font:
+        9px ui-monospace,
+        monospace;
+      color: var(--muted);
+    }
+
+    .notice {
+      border: 1px solid #d5c18e;
+      background: #fbf1d8;
+      border-radius: 5px;
+      padding: 11px;
+      font-size: 10.5px;
+      line-height: 1.55;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 5px;
+      padding: 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .revlist {
+      display: grid;
+      gap: 7px;
+    }
+
+    .rev {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 9px;
+      align-items: center;
+      border: 1px solid var(--soft);
+      border-left: 4px solid var(--amber);
+      background: #fffaf1;
+      border-radius: 5px;
+      padding: 9px;
+    }
+
+    .rev.over {
+      border-left-color: var(--red);
+    }
+
+    .rev b {
+      font-size: 11px;
+    }
+
+    .rev small {
+      display: block;
+      font:
+        9px ui-monospace,
+        monospace;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 13px;
+    }
+
+    .field {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 10.5px;
+    }
+
+    .toolbar input {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .subject {
+      margin-bottom: 15px;
+    }
+
+    .subject-head {
+      background: var(--green);
+      color: #fff;
+      border-radius: 5px 5px 0 0;
+      padding: 11px 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .subject-head h3 {
+      font:
+        700 14px Georgia,
+        serif;
+      margin: 0;
+    }
+
+    .subject-head span {
+      font:
+        9px ui-monospace,
+        monospace;
+    }
+
+    .items {
+      border: 1px solid var(--line);
+      border-top: 0;
+      background: var(--card);
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 28px 1fr 90px 80px 90px;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .item:last-child {
+      border-bottom: 0;
+    }
+
+    .tick {
+      width: 19px;
+      height: 19px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 9px;
+    }
+
+    .tick.done {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    .item b {
+      font-size: 10.5px;
+    }
+
+    .item small {
+      display: block;
+      font:
+        8.5px ui-monospace,
+        monospace;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 3px 6px;
+      font:
+        8.5px ui-monospace,
+        monospace;
+      color: var(--muted);
+    }
+
+    .pill.due {
+      color: var(--red);
+      border-color: #d8aaa3;
+      background: #fae7e3;
+    }
+
+    .timergrid {
+      grid-template-columns: 1.1fr 1fr;
+    }
+
+    .timer {
+      text-align: center;
+    }
+
+    .clock {
+      font:
+        700 64px ui-monospace,
+        monospace;
+      color: var(--green);
+      letter-spacing: -3px;
+      margin: 15px 0;
+    }
+
+    .presets {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .presets button {
+      border: 1px solid var(--line);
+      background: #f4eedf;
+      padding: 6px 9px;
+      border-radius: 3px;
+      font-size: 9.5px;
+      cursor: pointer;
+    }
+
+    .presets button.active {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .timer-fields,
+    .form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      text-align: left;
+    }
+
+    .timer-fields label,
+    .form label,
+    .setting label {
+      font:
+        700 8.5px ui-monospace,
+        monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .timer-fields .field,
+    .form .field,
+    .setting .field {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 82px 1fr 58px auto;
+      gap: 7px;
+      align-items: center;
+      padding: 7px;
+      border-bottom: 1px solid var(--soft);
+      font-size: 10px;
+    }
+
+    .practice {
+      grid-template-columns: 0.8fr 1.2fr;
+    }
+
+    .wide {
+      grid-column: 1/-1;
+    }
+
+    .practice-row {
+      grid-template-columns: 82px 1fr 70px 60px auto;
+    }
+
+    .progress {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .progress th {
+      font:
+        700 8.5px ui-monospace,
+        monospace;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: left;
+      border-bottom: 2px solid var(--ink);
+      padding: 7px;
+    }
+
+    .progress td {
+      font-size: 10px;
+      padding: 8px 7px;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .barbox {
+      height: 7px;
+      background: #e6dfcd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      background: var(--green);
+    }
+
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(30, 1fr);
+      gap: 3px;
+    }
+
+    .heat {
+      aspect-ratio: 1;
+      background: #e5dfce;
+      border-radius: 2px;
+    }
+
+    .h1 {
+      background: #bdd2c4;
+    }
+
+    .h2 {
+      background: #78a087;
+    }
+
+    .h3 {
+      background: #396c52;
+    }
+
+    .h4 {
+      background: #153f2f;
+    }
+
+    .settings {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .setting {
+      margin-bottom: 11px;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 21, 16, 0.65);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      z-index: 50;
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .modalbox {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      width: min(520px, 100%);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+    }
+
+    .modalbox h3 {
+      font:
+        700 21px Georgia,
+        serif;
+      margin: 0;
+    }
+
+    .rating {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin: 18px 0;
+    }
+
+    .rating button {
+      width: 52px;
+      height: 43px;
+      border: 1px solid var(--line);
+      background: #f4eedf;
+      border-radius: 4px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .rating button:hover {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--green);
+      color: #fff;
+      padding: 9px 13px;
+      border-radius: 4px;
+      font:
+        9px ui-monospace,
+        monospace;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 0.2s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width: 1050px) {
+      .stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .today,
+      .two,
+      .timergrid,
+      .practice,
+      .settings {
+        grid-template-columns: 1fr;
+      }
+
+      .item {
+        grid-template-columns: 26px 1fr 82px;
+      }
+
+      .item> :nth-child(4),
+      .item> :nth-child(5) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .app {
+        display: block;
+      }
+
+      .side {
+        position: static;
+        width: 100%;
+      }
+
+      .main {
+        margin: 0;
+        width: 100%;
+        padding: 20px 13px;
+      }
+
+      .nav {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .side h5,
+      .mini {
+        display: none;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .date {
+        display: none;
+      }
+
+      .clock {
+        font-size: 48px;
+      }
+
+      .heatmap {
+        grid-template-columns: repeat(15, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand">
+        <span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 64 64">
+            <rect width="64" height="64" rx="14" fill="#f6f0df" />
+            <path d="M17 13h25a6 6 0 0 1 6 6v31H22a6 6 0 0 1-6-6V14a1 1 0 0 1 1-1Z" fill="#183f30" />
+            <path d="M16 42a7 7 0 0 1 7-7h32M25 22h15M25 28h11" fill="none" stroke="#f6f0df" stroke-width="3"
+              stroke-linecap="round" />
+            <path d="m27 43 5 5 10-12" fill="none" stroke="#d39a35" stroke-width="4" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg></span><span class="brand-copy">The Study Ledger<small>CA Intermediate · May 2026
+            onwards</small></span>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <h5>Syllabus standing</h5>
+      <div id="sideProgress"></div>
+      <div class="side-actions">
+        <button id="exportBtn">Export backup</button><button id="importBtn">Import backup</button><input id="importFile"
+          type="file" accept="application/json" hidden />
+      </div>
+      <button class="link" id="linkBtn">Link autosave file</button>
+      <a href="dashboard.html" class="link" style="text-align:center;text-decoration:none;display:block;margin-top:6px;border:1px solid #527764;color:#e1e8e2;">Dashboard & Pricing</a>
+      <button onclick="logout()">Logout</button>
+
+    </aside>
+    <main class="main" id="main"></main>
+  </div>
+  <div class="modal hidden" id="modal"></div>
+  <div class="toast" id="toast">Recorded ✓</div>
+  <script>
+    window.logout = function() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "dashboard.html";
+    };
+    const token = localStorage.getItem("token");
+    const rawLicense = localStorage.getItem("software_license");
+    let hasActiveSubscription = false;
+
+    if (rawLicense) {
+      try {
+        const parsedLic = JSON.parse(rawLicense);
+        if (parsedLic && (parsedLic.status === "active" || parsedLic.plan)) {
+          hasActiveSubscription = true;
+        }
+      } catch (e) {}
+    }
+
+    if (!token || !hasActiveSubscription) {
+      window.location.href = "payment.html?plan=monthly&notice=required";
+    }
+    ("use strict");
+    const KEY = "ca_inter_complete_tracker_v1",
+      DAY = 864e5,
+      NORMAL = [1, 3, 7, 14, 30, 60, 90];
+    const DATA = {
+      accounts: {
+        name: "Advanced Accounting",
+        short: "Accounts",
+        group: 1,
+        type: "deep",
+        list: [
+          "Introduction to Accounting Standards",
+          "Framework for Preparation and Presentation of Financial Statements",
+          "Applicability of Accounting Standards",
+          "Presentation & Disclosures Based Accounting Standards",
+          "Assets Based Accounting Standards",
+          "Liabilities Based Accounting Standards",
+          "Accounting Standards Based on Items Impacting Financial Statements",
+          "Revenue Based Accounting Standards",
+          "Other Accounting Standards",
+          "Accounting Standards for Consolidated Financial Statements",
+          "Financial Statements of Companies",
+          "Buyback of Securities",
+          "Amalgamation of Companies",
+          "Internal Reconstruction",
+          "Accounting for Branches including Foreign Branches",
+        ],
+      },
+      law: {
+        name: "Corporate and Other Laws",
+        short: "Law",
+        group: 1,
+        type: "deep",
+        list: [
+          "Companies Act: Preliminary",
+          "Incorporation of Company and Matters Incidental Thereto",
+          "Prospectus and Allotment of Securities",
+          "Share Capital and Debentures",
+          "Acceptance of Deposits by Companies",
+          "Registration of Charges",
+          "Management and Administration",
+          "Declaration and Payment of Dividend",
+          "Accounts of Companies",
+          "Audit and Auditors",
+          "Companies Incorporated Outside India",
+          "Limited Liability Partnership Act, 2008",
+          "General Clauses Act, 1897",
+          "Interpretation of Statutes",
+          "Foreign Exchange Management Act, 1999",
+        ],
+      },
+      income_tax: {
+        name: "Income-tax Law",
+        short: "Income Tax",
+        group: 1,
+        type: "daily",
+        list: [
+          ["Basic Concepts", "Previous year, assessment year, person and assessee"],
+          ["Basic Concepts", "Income, total income, agricultural income and casual income"],
+          ["Basic Concepts", "Capital/revenue receipts; diversion vs application of income"],
+          ["Basic Concepts", "Tax rates, surcharge, cess and marginal relief"],
+          ["Basic Concepts", "Default and optional tax regimes for individuals"],
+          ["Residence and Scope", "Residential status of individuals"],
+          ["Residence and Scope", "Residential status of HUF, firm, AOP and company"],
+          ["Residence and Scope", "Scope of total income: ROR, RNOR and NR"],
+          ["Exempt Income", "Agricultural income and partial integration"],
+          ["Exempt Income", "Key exemptions under section 10"],
+          ["Salaries", "Basis of charge and employer-employee relationship"],
+          ["Salaries", "Allowances: taxable, exempt and partly exempt"],
+          ["Salaries", "Perquisites: specified and general employees"],
+          ["Salaries", "Retirement benefits: gratuity, pension and leave encashment"],
+          ["Salaries", "Provident funds, NPS and deductions from salary"],
+          ["House Property", "Annual value, deemed ownership and chargeability"],
+          ["House Property", "Self-occupied and let-out property computation"],
+          ["House Property", "Interest deduction, pre-construction interest and arrears"],
+          ["PGBP", "Basis of charge and section 28 incomes"],
+          ["PGBP", "General deductions under sections 30 to 37"],
+          ["PGBP", "Disallowances under sections 40, 40A and 43B"],
+          ["PGBP", "Depreciation: block of assets and additional depreciation"],
+          ["PGBP", "Presumptive taxation: sections 44AD, 44ADA and 44AE"],
+          ["PGBP", "Scientific research, preliminary expenses and special adjustments"],
+          ["PGBP", "Computation of business or professional income"],
+          ["Capital Gains", "Capital asset, transfer and non-transfer transactions"],
+          ["Capital Gains", "Cost, indexation and computation"],
+          ["Capital Gains", "Depreciable assets, slump sale and compulsory acquisition"],
+          ["Capital Gains", "Exemptions: sections 54, 54B, 54EC and 54F"],
+          ["Capital Gains", "Tax on short-term and long-term capital gains"],
+          ["Other Sources", "Dividends, interest and family pension"],
+          ["Other Sources", "Gifts and deemed income under section 56(2)(x)"],
+          ["Other Sources", "Deductions and computation"],
+          ["Clubbing", "Transfer to spouse, son's wife and revocable transfer"],
+          ["Clubbing", "Minor child, conversion of property and cross transfers"],
+          ["Set-off & Carry Forward", "Intra-head and inter-head set-off"],
+          ["Set-off & Carry Forward", "House property, business and speculation losses"],
+          ["Set-off & Carry Forward", "Capital loss, race-horse loss and unabsorbed depreciation"],
+          ["Deductions", "Sections 80C, 80CCC, 80CCD and 80D"],
+          ["Deductions", "Sections 80DD, 80DDB, 80E, 80G and 80GG"],
+          ["Deductions", "Other Chapter VI-A deductions and restrictions"],
+          ["TDS/TCS & Advance Tax", "Advance tax and interest under sections 234B/234C"],
+          ["TDS/TCS & Advance Tax", "TDS on salary, interest, contractor and professional payments"],
+          ["TDS/TCS & Advance Tax", "TDS on property, rent, e-commerce and specified transactions"],
+          ["TDS/TCS & Advance Tax", "TCS, certificates, returns and consequences"],
+          ["Return & Self Assessment", "Due dates, belated and revised returns"],
+          ["Return & Self Assessment", "Updated/defective return, PAN and self-assessment"],
+          ["Total Income & Tax", "Clubbing, set-off, deductions and computation sequence"],
+          ["Total Income & Tax", "AMT, rebate, special-rate income and optimisation"],
+        ],
+      },
+      gst: {
+        name: "Goods and Services Tax",
+        short: "GST",
+        group: 1,
+        type: "deep",
+        list: [
+          "GST in India - An Introduction",
+          "Supply under GST",
+          "Charge of GST",
+          "Place of Supply",
+          "Exemptions from GST",
+          "Time of Supply",
+          "Value of Supply",
+          "Input Tax Credit",
+          "Registration",
+          "Tax Invoice; Credit and Debit Notes",
+          "Accounts and Records",
+          "E-Way Bill",
+          "Payment of Tax",
+          "Tax Deduction at Source and Collection of Tax at Source",
+          "Returns",
+        ],
+      },
+      costing: {
+        name: "Cost and Management Accounting",
+        short: "Costing",
+        group: 2,
+        type: "deep",
+        list: [
+          "Introduction to Cost and Management Accounting",
+          "Material Cost",
+          "Employee Cost and Direct Expenses",
+          "Overheads - Absorption Costing Method",
+          "Activity Based Costing",
+          "Cost Sheet",
+          "Cost Accounting Systems",
+          "Unit & Batch Costing",
+          "Job Costing",
+          "Process & Operation Costing",
+          "Joint Products and By Products",
+          "Service Costing",
+          "Standard Costing",
+          "Marginal Costing",
+          "Budgets and Budgetary Control",
+        ],
+      },
+      audit: {
+        name: "Auditing and Ethics",
+        short: "Audit",
+        group: 2,
+        type: "daily",
+        list: [
+          ["Nature, Objective and Scope", "Meaning, nature and purpose of audit"],
+          ["Nature, Objective and Scope", "Objectives of auditor and reasonable assurance"],
+          ["Nature, Objective and Scope", "Scope, limitations and management responsibility"],
+          ["Nature, Objective and Scope", "Professional skepticism, judgment and ethics"],
+          ["Planning", "Overall audit strategy and audit plan"],
+          ["Planning", "Preliminary engagement, planning activities and changes"],
+          ["Planning", "Audit programme, supervision and review"],
+          ["Risk & Internal Control", "Audit risk model and risk of material misstatement"],
+          ["Risk & Internal Control", "Understanding entity, environment and internal control"],
+          ["Risk & Internal Control", "Identifying and assessing risks; significant risks"],
+          ["Risk & Internal Control", "Internal control components and limitations"],
+          ["Risk & Internal Control", "Tests of controls and substantive procedures"],
+          ["Risk & Internal Control", "IT environment, automated controls and GITCs"],
+          ["Audit Evidence", "Sufficiency, appropriateness and reliability"],
+          ["Audit Evidence", "Assertions and evidence-gathering procedures"],
+          ["Audit Evidence", "External confirmations and written representations"],
+          ["Audit Evidence", "Audit sampling: design, selection and evaluation"],
+          ["Audit Evidence", "Analytical procedures"],
+          ["Audit Evidence", "Related parties, subsequent events and going concern"],
+          ["Financial Statement Items", "Share capital, reserves and borrowings"],
+          ["Financial Statement Items", "PPE, intangible assets and investments"],
+          ["Financial Statement Items", "Inventories"],
+          ["Financial Statement Items", "Receivables, cash and bank"],
+          ["Financial Statement Items", "Revenue and purchases"],
+          ["Financial Statement Items", "Employee benefits and other expenses"],
+          ["Financial Statement Items", "Liabilities, provisions and contingencies"],
+          ["Audit Documentation", "Purpose, nature and form of working papers"],
+          ["Audit Documentation", "Assembly, retention, ownership and confidentiality"],
+          ["Completion and Review", "Misstatements, final review and completion procedures"],
+          ["Completion and Review", "Financial statement review and quality management"],
+          ["Audit Report", "Forming opinion and basic elements"],
+          ["Audit Report", "Qualified, adverse and disclaimer opinions"],
+          ["Audit Report", "Emphasis of Matter and Other Matter"],
+          ["Audit Report", "Key audit matters and comparative information"],
+          ["Audit Report", "Other information and Companies Act reporting"],
+          ["Different Entities", "Sole trader and partnership firm"],
+          ["Different Entities", "Charitable and educational institutions"],
+          ["Different Entities", "Hospital, club, cinema and hotel"],
+          ["Different Entities", "Local bodies and government expenditure"],
+          ["Audit of Banks", "Operations, internal controls and audit approach"],
+          ["Audit of Banks", "Advances, income recognition, NPA and provisioning"],
+          ["Audit of Banks", "Audit report, LFAR and special reports"],
+          ["Ethics & Engagement", "Fundamental principles and conceptual framework"],
+          ["Ethics & Engagement", "Threats, safeguards and independence"],
+          ["Ethics & Engagement", "CA Act, schedules and professional misconduct"],
+          ["Ethics & Engagement", "Advertisement, fees, occupation and client acceptance"],
+          ["Ethics & Engagement", "SA 210: terms of audit engagements"],
+          ["Ethics & Engagement", "Ethical case studies and disciplinary mechanism"],
+        ],
+      },
+      fm: {
+        name: "Financial Management",
+        short: "FM",
+        group: 2,
+        type: "deep",
+        list: [
+          "Scope and Objectives of Financial Management",
+          "Types of Financing",
+          "Financial Analysis and Planning - Ratio Analysis",
+          "Cost of Capital",
+          "Financing Decisions - Capital Structure",
+          "Financing Decisions - Leverages",
+          "Investment Decisions",
+          "Dividend Decision",
+          "Management of Working Capital",
+        ],
+      },
+      sm: {
+        name: "Strategic Management",
+        short: "SM",
+        group: 2,
+        type: "deep",
+        list: [
+          "Introduction to Strategic Management",
+          "Strategic Analysis: External Environment",
+          "Strategic Analysis: Internal Environment",
+          "Strategic Choices",
+          "Strategy Implementation and Evaluation",
+        ],
+      },
+    };
+    const KEYS = Object.keys(DATA),
+      ROT = ["accounts", "costing", "fm", "law", "gst", "sm"],
+      TODAY = () => {
+        let d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      },
+      add = (s, n) => {
+        let [a, b, c] = s.split("-").map(Number),
+          d = new Date(a, b - 1, c);
+        d.setDate(d.getDate() + n);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      },
+      dif = (a, b) => {
+        let x = a.split("-").map(Number),
+          y = b.split("-").map(Number);
+        return Math.round((new Date(x[0], x[1] - 1, x[2]) - new Date(y[0], y[1] - 1, y[2])) / DAY);
+      },
+      fmt = (s) =>
+        s
+          ? new Date(s + "T12:00").toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+          : "—",
+      esc = (s) =>
+        String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+        ),
+      uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4),
+      iid = (k, i) => k + ":" + i;
+    function info(id) {
+      if (!id) return null;
+      let [k, i] = id.split(":"),
+        s = DATA[k],
+        row = s?.list[+i];
+      if (!row) return null;
+      return {
+        id,
+        subject: k,
+        index: +i,
+        subjectName: s.name,
+        short: s.short,
+        unit: s.type === "daily" ? row[0] : "Chapter " + (+i + 1),
+        name: s.type === "daily" ? row[1] : row,
+        type: s.type,
+      };
+    }
+    function all() {
+      return KEYS.flatMap((k) => DATA[k].list.map((_, i) => info(iid(k, i))));
+    }
+    function fresh() {
+      return {
+        view: "today",
+        item: {},
+        topic: {},
+        tests: [],
+        rot: 0,
+        plans: {},
+        sessions: [],
+        practice: [],
+        settings: {
+          exam: "",
+          audit: 60,
+          tax: 60,
+          deep: 240
+        }
+      };
+    }
+    let state = fresh(),
+      handle = null,
+      saveT = null,
+      tick = null,
+      timer = { preset: 60, left: 3600, running: false, subject: "audit", item: "" };
+    function migrate(x) {
+      if (x?.subjects) return legacy(x);
+
+      let n = {
+        ...fresh(),
+        ...(x || {})
+      };
+
+      n.item = x?.item || {};
+      n.topic = x?.topic || {};
+      n.tests = x?.tests || [];
+      n.plans = x?.plans || {};
+      n.sessions = x?.sessions || [];
+      n.practice = x?.practice || [];
+
+      n.settings = {
+        ...fresh().settings,
+        ...(x?.settings || {})
+      };
+
+      return n;
+    }
+    function norm(s) {
+      return String(s || "")
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+    function legacy(x) {
+      let n = fresh(),
+        map = {
+          "advanced accounting": ["accounts"],
+          "corporate and other laws": ["law"],
+          taxation: ["income_tax", "gst"],
+          "goods services tax": ["gst"],
+          "cost and management accounting": ["costing"],
+          "auditing and ethics": ["audit"],
+          "financial management strategic management": ["fm", "sm"],
+        };
+      for (let s of x.subjects || []) {
+        let keys = map[norm(s.name)] || [],
+          cands = keys.flatMap((k) => items(k));
+        for (let t of s.topics || []) {
+          let q = norm(t.name),
+            hit =
+              cands.find((z) => norm(z.name) === q) ||
+              cands.find((z) => norm(z.name).includes(q) || q.includes(norm(z.name)));
+          if (hit && (t.lastRevised || t.nextDue || (t.timesRevised || 0) > 0 || t.confidence != null)) {
+            n.item[hit.id] = {
+              studiedAt: t.lastRevised || TODAY(),
+              stage: Math.min(6, Math.max(1, t.timesRevised || 1)),
+              nextDue: t.nextDue || add(TODAY(), 1),
+              lastRevised: t.lastRevised || null,
+              lastRating: t.confidence || null,
+              revisions: t.timesRevised || 0,
+              history: [{ date: t.lastRevised || TODAY(), kind: "imported" }],
+            };
+          }
+          if ((t.pmDone || 0) > 0)
+            n.practice.push({
+              id: uid(),
+              date: t.lastRevised || TODAY(),
+              subject: keys[0] || "accounts",
+              source: "ICAI Module",
+              q: t.pmDone,
+              correct: 0,
+              notes: "Imported from the earlier Study Ledger",
+            });
+        }
+      }
+      for (let [d, m] of Object.entries(x.dailyLog || {}))
+        if (+m > 0)
+          n.sessions.push({
+            id: uid(),
+            date: d,
+            time: "00:00",
+            minutes: Math.round(+m),
+            subject: "audit",
+            item: "",
+          });
+      for (let t of x.mockTests || [])
+        n.practice.push({
+          id: uid(),
+          date: t.date || TODAY(),
+          subject: "accounts",
+          source: "Mock Test",
+          q: +t.max || 100,
+          correct: +t.score || 0,
+          notes: "Imported mock result",
+        });
+      n.settings.exam = x.settings?.examDate || "";
+      return n;
+    }
+    function studied(id) {
+      return !!state.item[id]?.studiedAt;
+    }
+    function next(k) {
+      for (let i = 0; i < DATA[k].list.length; i++) if (!studied(iid(k, i))) return iid(k, i);
+      return null;
+    }
+    function deepPick() {
+      for (let n = 0; n < ROT.length; n++) {
+        let at = (state.rot + n) % ROT.length,
+          id = next(ROT[at]);
+        if (id) {
+          state.rot = at;
+          return id;
+        }
+      }
+      return null;
+    }
+    function plan() {
+      let d = TODAY();
+      if (!state.plans[d])
+        state.plans[d] = { audit: next("audit"), income_tax: next("income_tax"), deep: deepPick() };
+      let p = state.plans[d];
+      if (p.audit && studied(p.audit)) p.audit = next("audit");
+      if (p.income_tax && studied(p.income_tax)) p.income_tax = next("income_tax");
+      if (p.deep && studied(p.deep)) p.deep = deepPick();
+      return p;
+    }
+    async function load() {
+      const token = localStorage.getItem("token");
+
+      // Extra security
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "http://localhost:5000"
+        : "";
+
+      try {
+        const response = await fetch(`${API_BASE}/api/study`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Token expired or invalid
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+
+          window.location.href = "login.html";
+          return;
+        }
+
+        const result = await response.json();
+
+        // Load user's personal data
+        if (result.data && Object.keys(result.data).length > 0) {
+          state = migrate(result.data);
+        } else {
+          state = fresh();
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+
+        // Temporary fallback
+        state = fresh();
+      }
+
+      plan();
+      render();
+    }
+    function save() {
+      clearTimeout(saveT);
+
+      saveT = setTimeout(async () => {
+        const token = localStorage.getItem("token");
+
+        if (!token) return;
+
+        const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
+
+        try {
+          const response = await fetch(
+            `${API_BASE}/api/study`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                data: state
+              })
+            }
+          );
+
+          if (!response.ok) {
+            console.error("Failed to save study data");
+            return;
+          }
+
+          toast();
+
+        } catch (error) {
+          console.error("Error saving data:", error);
+        }
+
+      }, 500);
+    }
+
+
+    function toast() {
+      const element = document.getElementById("toast");
+
+      if (!element) return;
+
+      element.classList.add("show");
+
+      clearTimeout(toast.timer);
+
+      toast.timer = setTimeout(() => {
+        element.classList.remove("show");
+      }, 1000);
+    }
+    function logout() {
+      const confirmed = confirm("Are you sure you want to logout?");
+
+      if (!confirmed) return;
+
+      // Remove login information
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // Redirect to login page
+      window.location.href = "login.html";
+    }
+    function mark(id) {
+      let x = info(id),
+        r = state.item[id] || {};
+      if (!r.studiedAt) {
+        r.studiedAt = TODAY();
+        r.stage = 1;
+        r.nextDue = add(TODAY(), 1);
+        r.revisions = 0;
+        r.history = [{ date: TODAY(), kind: "studied" }];
+        state.item[id] = r;
+        if (x.type === "deep") {
+          let at = ROT.indexOf(x.subject);
+          if (at >= 0) state.rot = (at + 1) % ROT.length;
+        }
+      }
+      plan();
+      save();
+      render();
+    }
+    function gap(r, n) {
+      let s = Math.max(0, r.stage ?? 1);
+      if (n === 1) {
+        r.stage = Math.max(0, s - 1);
+        return 1;
+      }
+      if (n === 2) return Math.max(1, Math.ceil(NORMAL[Math.min(s, 6)] / 2));
+      if (n === 3) {
+        let g = NORMAL[Math.min(s, 6)];
+        r.stage = Math.min(6, s + 1);
+        return g;
+      }
+      if (n === 4) {
+        let g = Math.ceil(NORMAL[Math.min(s, 6)] * 1.25);
+        r.stage = Math.min(6, s + 1);
+        return g;
+      }
+      let g = NORMAL[Math.min(s + 1, 6)];
+      r.stage = Math.min(6, s + 2);
+      return g;
+    }
+    function rate(id, n) {
+      let r = state.item[id],
+        g = gap(r, n);
+      r.revisions = (r.revisions || 0) + 1;
+      r.lastRating = n;
+      r.lastRevised = TODAY();
+      r.nextDue = add(TODAY(), g);
+      r.history.push({ date: TODAY(), kind: "revision", rating: n, next: g });
+      closeModal();
+      save();
+      render();
+    }
+    function dues() {
+      return all()
+        .filter((x) => state.item[x.id]?.nextDue && dif(state.item[x.id].nextDue, TODAY()) <= 0)
+        .sort((a, b) => state.item[a.id].nextDue.localeCompare(state.item[b.id].nextDue));
+    }
+    function comp(k) {
+      let total = DATA[k].list.length,
+        done = DATA[k].list.filter((_, i) => studied(iid(k, i))).length;
+      return { total, done, pct: Math.round((done / total) * 100) };
+    }
+    function mins(d) {
+      return state.sessions.filter((x) => x.date === d).reduce((a, b) => a + b.minutes, 0);
+    }
+    function streak() {
+      let d = new Date(),
+        n = 0;
+      for (; ;) {
+        let s = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        if (
+          mins(s) > 0 ||
+          Object.values(state.item).some((r) => (r.history || []).some((h) => h.date === s))
+        ) {
+          n++;
+          d.setDate(d.getDate() - 1);
+        } else return n;
+      }
+    }
+    const VIEWS = [
+      ["today", "Today"],
+      ["syllabus", "Syllabus"],
+      ["revisions", "Revisions"],
+      ["timer", "Study Timer"],
+      ["practice", "Practice"],
+      ["analytics", "Analytics"],
+      ["settings", "Settings"],
+    ];
+    function header(a, b) {
+      return `<div class="top"><div><div class="title">${a}</div><div class="sub">${b}</div></div><div class="date">${new Date().toLocaleDateString("en-IN", { weekday: "long", day: "2-digit", month: "short", year: "numeric" })}</div></div>`;
+    }
+    function render() {
+      document.getElementById("nav").innerHTML = VIEWS.map(
+        (v, i) =>
+          `<button data-view="${v[0]}" class="${state.view === v[0] ? "active" : ""}"><i>${String(i + 1).padStart(2, "0")}</i>${v[1]}${v[0] === "revisions" && dues().length ? " · " + dues().length : ""}</button>`
+      ).join("");
+      document.getElementById("sideProgress").innerHTML = KEYS.map((k) => {
+        let c = comp(k);
+        return `<div class="mini"><span>${esc(DATA[k].short)}</span><span>${c.done}/${c.total}</span></div>`;
+      }).join("");
+      let m = document.getElementById("main");
+      m.innerHTML =
+        state.view === "today"
+          ? todayView()
+          : state.view === "syllabus"
+            ? syllabusView()
+            : state.view === "revisions"
+              ? revisionView()
+              : state.view === "timer"
+                ? timerView()
+                : state.view === "practice"
+                  ? practiceView()
+                  : state.view === "analytics"
+                    ? analyticsView()
+                    : settingsView();
+      bind();
+    }
+    function task(kind, id, min) {
+      let x = info(id),
+        label =
+          kind === "audit"
+            ? "Daily Audit topic"
+            : kind === "tax"
+              ? "Daily Income Tax topic"
+              : "4-hour deep-work rotation";
+      if (!x)
+        return `<div class="card task ${kind}"><div class="eyebrow">${label}</div><h3>Syllabus completed</h3><div class="meta">Every item in this stream is studied.</div></div>`;
+      return `<div class="card task ${kind}"><div class="eyebrow">${label}</div><h3>${esc(x.name)}</h3><div class="meta">${esc(x.subjectName)} · ${esc(x.unit)}</div><div class="target">TARGET · ${min} MINUTES</div><div class="actions"><button class="btn" data-start="${id}" data-min="${min}">Start timer</button><button class="btn alt" data-mark="${id}">Mark studied</button></div></div>`;
+    }
+    function dueList(a) {
+      return a.length
+        ? `<div class="revlist">${a
+          .map((x) => {
+            let r = state.item[x.id],
+              d = dif(r.nextDue, TODAY());
+            return `<div class="rev ${d < 0 ? "over" : ""}"><div><b>${esc(x.name)}</b><small>${esc(x.short)} · ${d < 0 ? Math.abs(d) + "d overdue" : "due today"} · last ${r.lastRating || "—"}/5</small></div><button class="btn ${d < 0 ? "red" : "amber"} small" data-revise="${x.id}">Revise & rate</button></div>`;
+          })
+          .join("")}</div>`
+        : `<div class="empty">Nothing due. The revision ledger is balanced.</div>`;
+    }
+    function todayView() {
+      let p = plan(),
+        d = dues(),
+        total = all().length,
+        done = Object.values(state.item).filter((x) => x.studiedAt).length,
+        left = state.settings.exam ? Math.max(0, dif(state.settings.exam, TODAY())) : "—";
+      return (
+        header("Today’s Study Desk", "unfinished work remains assigned; nothing is silently skipped") +
+        `<div class="grid stats"><div class="card stat"><b>Syllabus studied</b><strong>${done}/${total}</strong><small>${Math.round((done / total) * 100)}% first coverage</small></div><div class="card stat"><b>Due revisions</b><strong style="color:${d.length ? "var(--red)" : "var(--green)"}">${d.length}</strong><small>rate after active recall</small></div><div class="card stat"><b>Study today</b><strong>${(mins(TODAY()) / 60).toFixed(1)}h</strong><small>${mins(TODAY())} minutes</small></div><div class="card stat"><b>Streak</b><strong>${streak()}</strong><small>study days</small></div><div class="card stat"><b>Days to exam</b><strong>${left}</strong><small>${state.settings.exam ? fmt(state.settings.exam) : "set in Settings"}</small></div></div><div class="grid today">${task("audit", p.audit, state.settings.audit)}${task("tax", p.income_tax, state.settings.tax)}${task("deep", p.deep, state.settings.deep)}</div><div class="grid two"><div class="card"><div class="head"><h2>Revision desk</h2><span>${d.length} due / overdue</span></div>${dueList(d.slice(0, 8))}</div><div class="card"><div class="head"><h2>Rotation rule</h2><span>fixed cycle</span></div><div class="notice"><strong>Accounts → Costing → FM → Company & Other Law → GST → SM</strong><br><br>The subject changes only after the current chapter is marked studied. Audit and Income Tax advance one topic only after completion.</div></div></div>`
+      );
+    }
+    let search = "",
+      subjectFilter = "all",
+      statusFilter = "all";
+    function syllabusView() {
+      return (
+        header("Complete Syllabus Ledger", "ICAI New Scheme · May 2026 examination onwards") +
+        `<div class="toolbar"><input class="field" id="search" placeholder="Search chapter or topic" value="${esc(search)}"><select class="field" id="subjectFilter"><option value="all">All subjects</option>${KEYS.map((k) => `<option value="${k}" ${subjectFilter === k ? "selected" : ""}>${esc(DATA[k].name)}</option>`).join("")}</select><select class="field" id="statusFilter"><option value="all">All status</option><option value="pending" ${statusFilter === "pending" ? "selected" : ""}>Pending</option><option value="studied" ${statusFilter === "studied" ? "selected" : ""}>Studied</option><option value="due" ${statusFilter === "due" ? "selected" : ""}>Revision due</option></select></div>` +
+        KEYS.filter((k) => subjectFilter === "all" || k === subjectFilter)
+          .map(group)
+          .join("")
+      );
+    }
+    function group(k) {
+      let s = DATA[k],
+        c = comp(k),
+        rows = s.list
+          .map((_, i) => info(iid(k, i)))
+          .filter((x) => {
+            let r = state.item[x.id],
+              done = !!r?.studiedAt,
+              due = !!r?.nextDue && dif(r.nextDue, TODAY()) <= 0;
+            return (
+              (!search || `${x.name} ${x.unit}`.toLowerCase().includes(search.toLowerCase())) &&
+              (statusFilter === "all" ||
+                (statusFilter === "pending" && !done) ||
+                (statusFilter === "studied" && done) ||
+                (statusFilter === "due" && due))
+            );
+          })
+          .map((x, i) => {
+            let r = state.item[x.id],
+              done = !!r?.studiedAt,
+              due = !!r?.nextDue && dif(r.nextDue, TODAY()) <= 0;
+            return `<div class="item"><div class="tick ${done ? "done" : ""}">${done ? "✓" : x.index + 1}</div><div><b>${esc(x.name)}</b><small>${esc(x.unit)} · ${s.type === "daily" ? "daily stream" : "deep-work chapter"}</small></div><span class="pill ${due ? "due" : ""}">${due ? "revision due" : done ? "studied" : "pending"}</span><span class="pill">${r?.revisions || 0} rev.</span><div>${done ? `<button class="btn alt small" data-revise="${x.id}">Revise</button>` : `<button class="btn small" data-mark="${x.id}">Studied</button>`}</div></div>`;
+          })
+          .join("");
+      return `<section class="subject"><div class="subject-head"><h3>${esc(s.name)}</h3><span>${c.done}/${c.total} studied · ${c.pct}%</span></div><div class="items">${rows || `<div class="empty">No matching items.</div>`}</div></section>`;
+    }
+    function revisionView() {
+      let d = dues(),
+        up = all()
+          .filter((x) => {
+            let n = state.item[x.id]?.nextDue;
+            return n && dif(n, TODAY()) > 0 && dif(n, TODAY()) <= 7;
+          })
+          .sort((a, b) => state.item[a.id].nextDue.localeCompare(state.item[b.id].nextDue));
+      return (
+        header("Adaptive Revision Ledger", "low recall shortens the gap; strong recall earns spacing") +
+        `<div class="grid two"><div class="card"><div class="head"><h2>Due and overdue</h2><span>${d.length} entries</span></div>${dueList(d)}</div><div class="card"><div class="head"><h2>Next 7 days</h2><span>${up.length} scheduled</span></div>${up.length ? up.map((x) => `<div class="row"><span>${fmt(state.item[x.id].nextDue).replace(/ \d{4}/, "")}</span><span>${esc(x.name)}</span><span>${esc(x.short)}</span><span class="pill">in ${dif(state.item[x.id].nextDue, TODAY())}d</span></div>`).join("") : `<div class="empty">Nothing scheduled in the next 7 days.</div>`}<div class="notice" style="margin-top:14px"><strong>1/5</strong> tomorrow · <strong>2/5</strong> half-gap · <strong>3/5</strong> normal · <strong>4/5</strong> 25% longer · <strong>5/5</strong> skip forward. Normal: 1, 3, 7, 14, 30, 60, 90 days.</div></div></div>`
+      );
+    }
+    function items(k) {
+      return DATA[k].list.map((_, i) => info(iid(k, i)));
+    }
+    function clock() {
+      return `${String(Math.floor(timer.left / 60)).padStart(2, "0")}:${String(timer.left % 60).padStart(2, "0")}`;
+    }
+    function timerView() {
+      let recent = [...state.sessions]
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
+        .slice(0, 15);
+      return (
+        header("Study Timer", "completed countdowns post automatically") +
+        `<div class="grid timergrid"><div class="card timer"><div class="presets">${[
+          [25, "25 focus"],
+          [50, "50 focus"],
+          [60, "Audit/Tax"],
+          [90, "90 focus"],
+          [240, "4h deep"],
+        ]
+          .map(
+            (x) =>
+              `<button data-preset="${x[0]}" class="${timer.preset === x[0] ? "active" : ""}">${x[1]}</button>`
+          )
+          .join(
+            ""
+          )}</div><div class="clock" id="clock">${clock()}</div><div class="actions" style="justify-content:center;margin:12px"><button class="btn" id="timerStart">${timer.running ? "Pause" : "Start"}</button><button class="btn alt" id="timerReset">Reset</button><button class="btn alt" id="timerLog">Log elapsed</button></div><div class="timer-fields"><label>Subject<select class="field" id="timerSubject">${KEYS.map((k) => `<option value="${k}" ${timer.subject === k ? "selected" : ""}>${esc(DATA[k].name)}</option>`).join("")}</select></label><label>Linked item<select class="field" id="timerItem"><option value="">General study</option>${items(
+            timer.subject
+          )
+            .map(
+              (x) =>
+                `<option value="${x.id}" ${timer.item === x.id ? "selected" : ""}>${esc(x.name)}</option>`
+            )
+            .join(
+              ""
+            )}</select></label></div></div><div class="card"><div class="head"><h2>Recent sessions</h2><span>${state.sessions.length} total</span></div>${recent.length ? recent.map((s) => `<div class="row"><span>${fmt(s.date).replace(/ \d{4}/, "")}</span><span>${esc(DATA[s.subject]?.short || "General")}${s.item ? " · " + esc(info(s.item)?.name || "") : ""}</span><strong>${s.minutes}m</strong><button class="btn alt small" data-del-session="${s.id}">×</button></div>`).join("") : `<div class="empty">No sessions logged.</div>`}</div></div>`
+      );
+    }
+    function preset(n) {
+      clearInterval(tick);
+      timer.preset = n;
+      timer.left = n * 60;
+      timer.running = false;
+      render();
+    }
+    function toggle() {
+      if (timer.running) {
+        timer.running = false;
+        clearInterval(tick);
+        render();
+        return;
+      }
+      timer.running = true;
+      tick = setInterval(() => {
+        timer.left--;
+        let e = document.getElementById("clock");
+        if (e) e.textContent = clock();
+        if (timer.left <= 0) {
+          clearInterval(tick);
+          timer.running = false;
+          log(timer.preset);
+          timer.left = timer.preset * 60;
+          alert("Session complete and posted.");
+          render();
+        }
+      }, 1000);
+      render();
+    }
+    function log(n) {
+      n = Math.max(1, Math.round(n));
+      state.sessions.push({
+        id: uid(),
+        date: TODAY(),
+        time: new Date().toTimeString().slice(0, 5),
+        minutes: n,
+        subject: timer.subject,
+        item: timer.item,
+      });
+      save();
+    }
+    function elapsed() {
+      let n = Math.round((timer.preset * 60 - timer.left) / 60);
+      if (n < 1) return alert("No elapsed minutes to log.");
+      log(n);
+      preset(timer.preset);
+    }
+    function practiceView() {
+      let rows = [...state.practice].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id));
+      return (
+        header("Practice & Question Ledger", "ICAI module, RTP, MTP, PYQ and mock practice") +
+        `<div class="grid practice"><div class="card"><div class="head"><h2>Post practice</h2><span>one entry</span></div><div class="form"><label>Subject<select class="field" id="pSubject">${KEYS.map((k) => `<option value="${k}">${esc(DATA[k].name)}</option>`).join("")}</select></label><label>Source<select class="field" id="pSource"><option>ICAI Module</option><option>RTP</option><option>MTP</option><option>PYQ</option><option>Question Bank</option><option>Mock Test</option></select></label><label>Questions<input class="field" id="pQ" type="number" min="1" value="10"></label><label>Correct<input class="field" id="pC" type="number" min="0" value="0"></label><label class="wide">Mistakes / notes<textarea class="field" id="pNotes" rows="3"></textarea></label><button class="btn wide" id="addPractice">Post practice</button></div></div><div class="card"><div class="head"><h2>Practice history</h2><span>${rows.reduce((a, b) => a + b.q, 0)} questions</span></div>${rows.length ? rows.map((p) => `<div class="row practice-row"><span>${fmt(p.date).replace(/ \d{4}/, "")}</span><span><strong>${esc(DATA[p.subject]?.short)}</strong> · ${esc(p.source)}<small class="meta">${esc(p.notes || "No notes")}</small></span><span>${p.correct}/${p.q}</span><span>${Math.round((p.correct / p.q) * 100)}%</span><button class="btn alt small" data-del-practice="${p.id}">×</button></div>`).join("") : `<div class="empty">No practice posted.</div>`}</div></div>`
+      );
+    }
+    function analyticsView() {
+      let days = [];
+      for (let i = 29; i >= 0; i--) {
+        let d = add(TODAY(), -i);
+        days.push({ d, m: mins(d) });
+      }
+      let max = Math.max(1, ...days.map((x) => x.m)),
+        total = all().length,
+        done = Object.values(state.item).filter((x) => x.studiedAt).length,
+        revs = Object.values(state.item).reduce((a, b) => a + (b.revisions || 0), 0),
+        qs = state.practice.reduce((a, b) => a + b.q, 0);
+      return (
+        header("Progress Analytics", "coverage, consistency, practice and recall") +
+        `<div class="grid stats"><div class="card stat"><b>First coverage</b><strong>${Math.round((done / total) * 100)}%</strong><small>${done}/${total} items</small></div><div class="card stat"><b>Revisions</b><strong>${revs}</strong><small>rated recalls</small></div><div class="card stat"><b>Questions</b><strong>${qs}</strong><small>solved</small></div><div class="card stat"><b>Study hours</b><strong>${(state.sessions.reduce((a, b) => a + b.minutes, 0) / 60).toFixed(1)}</strong><small>timer ledger</small></div><div class="card stat"><b>Streak</b><strong>${streak()}</strong><small>days</small></div></div><div class="card" style="margin-bottom:16px"><div class="head"><h2>Last 30 days</h2><span>darker = more study</span></div><div class="heatmap">${days
+          .map((x) => {
+            let r = x.m / max,
+              c = !x.m ? "" : r < 0.25 ? "h1" : r < 0.5 ? "h2" : r < 0.8 ? "h3" : "h4";
+            return `<div class="heat ${c}" title="${x.d}: ${x.m} minutes"></div>`;
+          })
+          .join(
+            ""
+          )}</div></div><div class="card"><div class="head"><h2>Subject standing</h2><span>first coverage</span></div><table class="progress"><thead><tr><th>Subject</th><th>Stream</th><th>Studied</th><th>Progress</th><th>%</th></tr></thead><tbody>${KEYS.map(
+            (k) => {
+              let c = comp(k);
+              return `<tr><td><strong>${esc(DATA[k].name)}</strong></td><td>${DATA[k].type === "daily" ? "daily topic" : "deep chapter"}</td><td>${c.done}/${c.total}</td><td><div class="barbox"><div class="bar" style="width:${c.pct}%"></div></div></td><td>${c.pct}%</td></tr>`;
+            }
+          ).join("")}</tbody></table></div>`
+      );
+    }
+    function settingsView() {
+      return (
+        header("Settings & Data Safety", "all data stays on this PC") +
+        `<div class="grid settings"><div class="card"><div class="head"><h2>Routine settings</h2><span>minutes</span></div><div class="setting"><label>Exam date<input class="field" id="exam" type="date" value="${state.settings.exam}"></label></div><div class="setting"><label>Audit daily target<input class="field" id="auditMin" type="number" min="10" value="${state.settings.audit}"></label></div><div class="setting"><label>Income Tax daily target<input class="field" id="taxMin" type="number" min="10" value="${state.settings.tax}"></label></div><div class="setting"><label>Deep-work target<input class="field" id="deepMin" type="number" min="30" value="${state.settings.deep}"></label></div><button class="btn" id="saveSettings">Save settings</button></div><div class="card"><div class="head"><h2>Offline storage</h2><span>backup</span></div><div class="notice"><strong>Browser copy:</strong> automatic local storage.<br><strong>PC autosave:</strong> “Link autosave file” works in Chrome/Edge.<br><strong>Portable copy:</strong> export JSON regularly and import it after changing browsers or PCs.</div><div class="actions" style="margin-top:14px"><button class="btn" id="settingsExport">Export JSON</button><button class="btn alt" id="settingsImport">Import JSON</button><button class="btn red" id="reset">Reset all</button></div></div></div>`
+      );
+    }
+    function modal(id) {
+      let x = info(id),
+        m = document.getElementById("modal");
+      m.classList.remove("hidden");
+      m.innerHTML = `<div class="modalbox"><h3>Rate your recall</h3><p><strong>${esc(x.name)}</strong><br><span class="meta">${esc(x.subjectName)} · ${esc(x.unit)}</span></p><div class="rating">${[1, 2, 3, 4, 5].map((n) => `<button data-rate="${n}" data-id="${id}" title="${["Blank", "Weak", "Okay", "Strong", "Effortless"][n - 1]}">${n}</button>`).join("")}</div><div class="notice">1 = blank · 2 = weak · 3 = okay · 4 = strong · 5 = effortless. Always rate after trying active recall or questions.</div><div class="actions" style="justify-content:flex-end;margin-top:14px"><button class="btn alt" id="cancelModal">Cancel</button></div></div>`;
+      document
+        .querySelectorAll("[data-rate]")
+        .forEach((b) => (b.onclick = () => rate(b.dataset.id, +b.dataset.rate)));
+      document.getElementById("cancelModal").onclick = closeModal;
+    }
+    function closeModal() {
+      document.getElementById("modal").classList.add("hidden");
+    }
+    function bind() {
+      document.querySelectorAll("[data-view]").forEach(
+        (b) =>
+        (b.onclick = () => {
+          state.view = b.dataset.view;
+          save();
+          render();
+        })
+      );
+      document.querySelectorAll("[data-mark]").forEach((b) => (b.onclick = () => mark(b.dataset.mark)));
+      document.querySelectorAll("[data-revise]").forEach((b) => (b.onclick = () => modal(b.dataset.revise)));
+      document.querySelectorAll("[data-start]").forEach(
+        (b) =>
+        (b.onclick = () => {
+          let x = info(b.dataset.start);
+          timer.subject = x.subject;
+          timer.item = x.id;
+          timer.preset = +b.dataset.min;
+          timer.left = timer.preset * 60;
+          state.view = "timer";
+          render();
+        })
+      );
+      let q = document.getElementById("search");
+      if (q)
+        q.oninput = () => {
+          search = q.value;
+          render();
+        };
+      let sf = document.getElementById("subjectFilter");
+      if (sf)
+        sf.onchange = () => {
+          subjectFilter = sf.value;
+          render();
+        };
+      let st = document.getElementById("statusFilter");
+      if (st)
+        st.onchange = () => {
+          statusFilter = st.value;
+          render();
+        };
+      document
+        .querySelectorAll("[data-preset]")
+        .forEach((b) => (b.onclick = () => preset(+b.dataset.preset)));
+      let a = document.getElementById("timerStart");
+      if (a) a.onclick = toggle;
+      let r = document.getElementById("timerReset");
+      if (r) r.onclick = () => preset(timer.preset);
+      let l = document.getElementById("timerLog");
+      if (l) l.onclick = elapsed;
+      let ts = document.getElementById("timerSubject");
+      if (ts)
+        ts.onchange = () => {
+          timer.subject = ts.value;
+          timer.item = "";
+          render();
+        };
+      let ti = document.getElementById("timerItem");
+      if (ti) ti.onchange = () => (timer.item = ti.value);
+      document.querySelectorAll("[data-del-session]").forEach(
+        (b) =>
+        (b.onclick = () => {
+          state.sessions = state.sessions.filter((x) => x.id !== b.dataset.delSession);
+          save();
+          render();
+        })
+      );
+      let ap = document.getElementById("addPractice");
+      if (ap)
+        ap.onclick = () => {
+          let q = +document.getElementById("pQ").value,
+            c = +document.getElementById("pC").value;
+          if (!q || c < 0 || c > q) return alert("Enter valid question counts.");
+          state.practice.push({
+            id: uid(),
+            date: TODAY(),
+            subject: document.getElementById("pSubject").value,
+            source: document.getElementById("pSource").value,
+            q,
+            correct: c,
+            notes: document.getElementById("pNotes").value.trim(),
+          });
+          save();
+          render();
+        };
+      document.querySelectorAll("[data-del-practice]").forEach(
+        (b) =>
+        (b.onclick = () => {
+          state.practice = state.practice.filter((x) => x.id !== b.dataset.delPractice);
+          save();
+          render();
+        })
+      );
+      let ss = document.getElementById("saveSettings");
+      if (ss)
+        ss.onclick = () => {
+          state.settings.exam = document.getElementById("exam").value;
+          state.settings.audit = Math.max(10, +document.getElementById("auditMin").value || 60);
+          state.settings.tax = Math.max(10, +document.getElementById("taxMin").value || 60);
+          state.settings.deep = Math.max(30, +document.getElementById("deepMin").value || 240);
+          save();
+          render();
+        };
+      let ex = document.getElementById("settingsExport");
+      if (ex) ex.onclick = exportData;
+      let im = document.getElementById("settingsImport");
+      if (im) im.onclick = () => document.getElementById("importFile").click();
+      let reset = document.getElementById("reset");
+      if (reset) reset.onclick = resetAll;
+    }
+    function exportData() {
+      let b = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }),
+        a = document.createElement("a");
+      a.href = URL.createObjectURL(b);
+      a.download = "CA-Inter-Study-Ledger-" + TODAY() + ".json";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 500);
+    }
+    function importData(f) {
+      let r = new FileReader();
+      r.onload = () => {
+        try {
+          state = migrate(JSON.parse(r.result));
+          plan();
+          save();
+          render();
+          toast();
+        } catch (e) {
+          alert("Invalid Study Ledger backup.");
+        }
+      };
+      r.readAsText(f);
+    }
+    async function link() {
+      if (!window.showSaveFilePicker)
+        return alert(
+          "Linked autosave works in Chrome/Edge. Browser storage and Export JSON remain fully offline."
+        );
+      try {
+        handle = await showSaveFilePicker({
+          suggestedName: "CA-Inter-Study-Ledger-data.json",
+          types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
+        });
+        let w = await handle.createWritable();
+        await w.write(JSON.stringify(state, null, 2));
+        await w.close();
+        note("Autosaving to " + handle.name);
+      } catch (e) {
+        if (e.name !== "AbortError") alert("Could not link the file.");
+      }
+    }
+    function resetAll() {
+      if (confirm("Reset all progress, revisions, sessions and practice? Export first if needed.")) {
+        state = fresh();
+        save();
+        plan();
+        render();
+      }
+    }
+    document.getElementById("exportBtn").onclick = exportData;
+    document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+    document.getElementById("importFile").onchange = (e) => {
+      if (e.target.files[0]) importData(e.target.files[0]);
+      e.target.value = "";
+    };
+    document.getElementById("linkBtn").onclick = link;
+    document.getElementById("modal").onclick = (e) => {
+      if (e.target.id === "modal") closeModal();
+    };
+    document.addEventListener("keydown", (e) => {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) return;
+      let n = +e.key;
+      if (n >= 1 && n <= 7) {
+        state.view = VIEWS[n - 1][0];
+        render();
+      }
+    });
+    load();
+  </script>
+  <style>
+    .brand {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 0 6px;
+      line-height: 1.05;
+    }
+
+    .brand-logo {
+      display: block;
+      width: 42px;
+      height: 42px;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.16));
+    }
+
+    .brand-logo svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .brand-copy {
+      display: block;
+    }
+
+    .brand-copy small {
+      line-height: 1.35;
+    }
+
+    @media (max-width: 700px) {
+      .brand {
+        max-width: 360px;
+      }
+    }
+
+    .chapter-box {
+      border-bottom: 1px solid var(--soft);
+      background: var(--card);
+    }
+
+    .chapter-box:last-child {
+      border-bottom: 0;
+    }
+
+    .chapter-box summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 11px 12px;
+      display: grid;
+      grid-template-columns: 30px 1fr 170px 82px;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .chapter-box summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .chapter-box[open] summary {
+      background: #f7f1e3;
+    }
+
+    .chapter-title {
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .chapter-title small {
+      display: block;
+      font:
+        9px ui-monospace,
+        monospace;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .chapter-track {
+      height: 7px;
+      background: #e8e0ce;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .chapter-track i {
+      display: block;
+      height: 100%;
+      background: var(--green);
+      border-radius: 10px;
+    }
+
+    .chapter-content {
+      padding: 4px 14px 13px 44px;
+      background: #fffcf4;
+    }
+
+    .subtopic {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 3px;
+      border-bottom: 1px dotted var(--soft);
+      font-size: 10.5px;
+    }
+
+    .subtopic:last-child {
+      border-bottom: 0;
+    }
+
+    .subtopic input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+
+    .subtopic.done span {
+      text-decoration: line-through;
+      color: #737469;
+    }
+
+    .subtopic small {
+      font:
+        8.5px ui-monospace,
+        monospace;
+      color: var(--muted);
+    }
+
+    .task.deep {
+      min-height: 360px;
+    }
+
+    .task-progress {
+      margin: 9px 0;
+    }
+
+    .task-progress .meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .task-topics {
+      max-height: 185px;
+      overflow: auto;
+      border: 1px solid var(--soft);
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin: 5px 0 11px;
+    }
+
+    .task-topics .subtopic {
+      grid-template-columns: 18px 1fr;
+      padding: 7px 1px;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .analysis-grid.equal {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .chart-box {
+      min-height: 250px;
+    }
+
+    .chart-box svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 11px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+
+    .donut-wrap {
+      display: grid;
+      grid-template-columns: 155px 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .donut-wrap svg {
+      width: 155px;
+      height: 155px;
+    }
+
+    .donut-center {
+      font:
+        700 23px Georgia,
+        serif;
+      fill: var(--ink);
+    }
+
+    .donut-small {
+      font:
+        9px ui-monospace,
+        monospace;
+      fill: var(--muted);
+    }
+
+    .legend-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10px;
+      padding: 6px 0;
+      border-bottom: 1px dotted var(--soft);
+    }
+
+    .legend-line:last-child {
+      border-bottom: 0;
+    }
+
+    .metric-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin: 8px 0 14px;
+    }
+
+    .micro {
+      background: #f7f1e3;
+      border: 1px solid var(--soft);
+      border-radius: 5px;
+      padding: 9px;
+    }
+
+    .micro b {
+      display: block;
+      font:
+        700 17px Georgia,
+        serif;
+    }
+
+    .micro span {
+      font:
+        8.5px ui-monospace,
+        monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .subject-meter {
+      display: grid;
+      grid-template-columns: 94px 1fr 72px;
+      gap: 9px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dotted var(--soft);
+    }
+
+    .subject-meter strong {
+      font-size: 10px;
+    }
+
+    .subject-meter small {
+      font:
+        9px ui-monospace,
+        monospace;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .subject-meter .barbox {
+      height: 9px;
+    }
+
+    .practice-section {
+      margin-top: 16px;
+    }
+
+    .test-row {
+      display: grid;
+      grid-template-columns: 78px 1fr 70px 60px auto;
+      gap: 7px;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid var(--soft);
+      font-size: 10px;
+    }
+
+    .day-activity {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .day-activity span {
+      border: 1px solid var(--soft);
+      background: #faf5e9;
+      border-radius: 15px;
+      padding: 5px 8px;
+      font:
+        9px ui-monospace,
+        monospace;
+    }
+
+    .insight {
+      padding: 10px;
+      border-left: 3px solid var(--green);
+      background: #f4efe1;
+      font-size: 10.5px;
+      line-height: 1.5;
+      margin: 7px 0;
+    }
+
+    .insight.warn {
+      border-left-color: var(--amber);
+    }
+
+    .insight.bad {
+      border-left-color: var(--red);
+    }
+
+    @media (max-width: 1050px) {
+
+      .analysis-grid,
+      .analysis-grid.equal {
+        grid-template-columns: 1fr;
+      }
+
+      .chapter-box summary {
+        grid-template-columns: 26px 1fr 75px;
+      }
+
+      .chapter-box summary> :nth-child(3) {
+        display: none;
+      }
+
+      .metric-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .donut-wrap {
+        grid-template-columns: 120px 1fr;
+      }
+
+      .donut-wrap svg {
+        width: 120px;
+        height: 120px;
+      }
+
+      .subject-meter {
+        grid-template-columns: 76px 1fr 55px;
+      }
+    }
+  </style>
+  <script>
+    "use strict";
+    const CHAPTER_TOPICS = {
+      accounts: [
+        [
+          "Need, objectives and benefits of accounting standards",
+          "Accounting Standards Board and standard-setting process",
+          "Indian Accounting Standards versus Accounting Standards",
+          "Compliance, disclosure and limitations",
+        ],
+        [
+          "Purpose, users and objectives of financial statements",
+          "Underlying assumptions and qualitative characteristics",
+          "Elements of financial statements",
+          "Recognition and measurement principles",
+          "Concepts of capital and capital maintenance",
+        ],
+        [
+          "Applicability to companies and non-company entities",
+          "Classification and size-based exemptions",
+          "Disclosure requirements and compliance",
+          "Consistency, transition and consequences of non-compliance",
+        ],
+        [
+          "AS 1: Disclosure of Accounting Policies",
+          "AS 3: Cash Flow Statements",
+          "AS 17: Segment Reporting",
+          "AS 18: Related Party Disclosures",
+          "AS 20: Earnings Per Share",
+          "AS 24: Discontinuing Operations",
+          "AS 25: Interim Financial Reporting",
+        ],
+        [
+          "AS 2: Valuation of Inventories",
+          "AS 10: Property, Plant and Equipment",
+          "AS 13: Accounting for Investments",
+          "AS 16: Borrowing Costs",
+          "AS 19: Leases",
+          "AS 26: Intangible Assets",
+          "AS 28: Impairment of Assets",
+        ],
+        [
+          "AS 15: Employee Benefits - short-term and post-employment",
+          "Defined benefit plans, actuarial valuation and disclosures",
+          "AS 29: Provisions, Contingent Liabilities and Contingent Assets",
+          "Recognition, measurement, reimbursement and onerous contracts",
+        ],
+        [
+          "AS 4: Contingencies and Events Occurring After the Balance Sheet Date",
+          "AS 5: Net Profit or Loss, Prior Period Items and Changes in Accounting Policies",
+          "AS 11: Effects of Changes in Foreign Exchange Rates",
+          "AS 22: Accounting for Taxes on Income",
+        ],
+        [
+          "AS 7: Construction Contracts - recognition and measurement",
+          "Percentage-of-completion and expected losses",
+          "AS 9: Revenue Recognition",
+          "Sale of goods, services, interest, royalties and dividends",
+        ],
+        [
+          "AS 12: Accounting for Government Grants",
+          "AS 14: Accounting for Amalgamations - core principles",
+          "AS 27: Financial Reporting of Interests in Joint Ventures",
+          "Cross-standard presentation, disclosure and practical adjustments",
+        ],
+        [
+          "AS 21: Consolidated Financial Statements",
+          "Minority interest, capital reserve and goodwill on consolidation",
+          "AS 23: Accounting for Investments in Associates",
+          "AS 27: Joint ventures and proportionate consolidation",
+          "Elimination of inter-company balances and unrealised profit",
+        ],
+        [
+          "Schedule III structure and classification",
+          "Statement of profit and loss and balance sheet",
+          "Adjustments and disclosures",
+          "Managerial remuneration and CSR-related presentation",
+          "Preparation of final company financial statements",
+        ],
+        [
+          "Legal conditions and eligible sources for buyback",
+          "Maximum permissible buyback and debt-equity test",
+          "Premium on buyback and capital redemption reserve",
+          "Journal entries and extinguishment of shares",
+          "Post-buyback balance sheet and practical questions",
+        ],
+        [
+          "Nature and methods of amalgamation",
+          "Purchase consideration and discharge",
+          "Pooling-of-interests versus purchase method",
+          "Inter-company balances and statutory reserves",
+          "Journal entries and post-amalgamation balance sheet",
+        ],
+        [
+          "Need and structure of internal reconstruction schemes",
+          "Capital reduction and alteration of share capital",
+          "Revaluation and write-off of assets and liabilities",
+          "Treatment of creditors, debenture holders and arrears",
+          "Journal entries and reconstructed balance sheet",
+        ],
+        [
+          "Dependent branch and debtors system",
+          "Stock-and-debtors system and branch loading",
+          "Independent branch accounting",
+          "Goods/cash in transit and inter-branch transactions",
+          "Foreign branch translation and exchange differences",
+        ],
+      ],
+      costing: [
+        [
+          "Objectives and scope of cost and management accounting",
+          "Cost concepts, classification and behaviour",
+          "Cost units, cost centres and responsibility centres",
+          "Cost accounting standards and relationship with financial accounts",
+        ],
+        [
+          "Material procurement, purchase procedure and documentation",
+          "Inventory levels, EOQ and reorder quantity",
+          "Pricing of material issues: FIFO, weighted average and standard price",
+          "Normal/abnormal loss, scrap, waste and spoilage",
+          "Inventory control: ABC, VED and perpetual inventory",
+        ],
+        [
+          "Employee time keeping, time booking and payroll",
+          "Labour turnover and replacement cost",
+          "Remuneration systems, incentive schemes and overtime",
+          "Idle time and employee cost treatment",
+          "Direct expenses and chargeable expenses",
+        ],
+        [
+          "Classification, collection and allocation of overheads",
+          "Apportionment and re-apportionment of service departments",
+          "Overhead absorption rates",
+          "Under/over-absorption and supplementary rates",
+          "Machine-hour rate and capacity-based costing",
+        ],
+        [
+          "Need and principles of activity-based costing",
+          "Activities, cost pools and cost drivers",
+          "Cost-driver rates and product costing",
+          "ABC versus traditional costing",
+          "Activity-based management and practical questions",
+        ],
+        [
+          "Elements of cost and structure of a cost sheet",
+          "Prime cost, factory cost and production cost",
+          "Cost of goods sold and cost of sales",
+          "Treatment of opening/closing inventory and adjustments",
+          "Tender, quotation and estimated cost sheets",
+        ],
+        [
+          "Non-integrated accounting system and control accounts",
+          "Integrated accounting system",
+          "Reconciliation of cost and financial profits",
+          "Treatment of notional charges and abnormal items",
+          "Journal entries and practical reconciliation",
+        ],
+        [
+          "Unit costing and cost per unit",
+          "Batch costing and economic batch quantity",
+          "Cost sheet for unit/batch production",
+          "Normal loss, defectives and overhead absorption",
+          "Practical questions and pricing",
+        ],
+        [
+          "Job identification and job cost sheet",
+          "Allocation of material, labour and overheads",
+          "Contract/job completion and work-in-progress",
+          "Pricing, profitability and job-control reports",
+          "Job costing practical questions",
+        ],
+        [
+          "Process accounts and normal/abnormal loss",
+          "Abnormal gain and inter-process profit",
+          "Equivalent production and weighted-average/FIFO methods",
+          "Opening/closing work-in-progress",
+          "Operation costing and practical statements",
+        ],
+        [
+          "Joint products versus by-products",
+          "Split-off point and joint-cost allocation",
+          "Sales-value, physical-unit and NRV methods",
+          "Accounting treatment of by-products",
+          "Further processing decisions",
+        ],
+        [
+          "Service cost units and composite cost units",
+          "Transport costing: passenger/km and tonne/km",
+          "Hospital, hotel and canteen costing",
+          "Powerhouse and other service organisations",
+          "Service cost statements and pricing",
+        ],
+        [
+          "Standard cost, standard setting and variance analysis",
+          "Material price, usage, mix and yield variances",
+          "Labour rate, efficiency, idle time and mix variances",
+          "Variable and fixed overhead variances",
+          "Sales variances and variance interpretation",
+        ],
+        [
+          "Marginal cost, contribution and P/V ratio",
+          "Break-even point, margin of safety and target profit",
+          "Make-or-buy, shutdown and limiting factor decisions",
+          "Sales mix, key factor and pricing decisions",
+          "Marginal versus absorption costing reconciliation",
+        ],
+        [
+          "Budget objectives and budgetary control system",
+          "Functional budgets: sales, production and purchases",
+          "Cash budget and master budget",
+          "Fixed versus flexible budgets",
+          "Zero-based budgeting, performance budgeting and control",
+        ],
+      ],
+      fm: [
+        [
+          "Nature, scope and financial objectives",
+          "Profit maximisation versus wealth maximisation",
+          "Financial decisions and finance function",
+          "Agency issues, risk-return trade-off and shareholder value",
+        ],
+        [
+          "Short-term, medium-term and long-term financing",
+          "Equity shares, preference shares and debentures",
+          "Bank finance, lease financing and venture capital",
+          "Internal financing, retained earnings and hybrid instruments",
+          "Selection of suitable financing sources",
+        ],
+        [
+          "Liquidity, solvency and profitability ratios",
+          "Activity/turnover ratios and operating performance",
+          "DuPont analysis and return on investment",
+          "Cash flow interpretation and financial forecasting",
+          "Ratio-based reconstruction and practical problems",
+        ],
+        [
+          "Cost of debt and preference capital",
+          "Cost of equity: dividend growth and CAPM",
+          "Cost of retained earnings",
+          "Weighted average cost of capital and marginal cost",
+          "Book-value versus market-value weights",
+        ],
+        [
+          "Capital structure theories: NI, NOI and traditional approach",
+          "Modigliani-Miller propositions",
+          "EBIT-EPS analysis and indifference point",
+          "Financial risk and optimal capital structure",
+          "Capital structure practical problems",
+        ],
+        [
+          "Operating leverage and operating risk",
+          "Financial leverage and financial risk",
+          "Combined leverage and sensitivity analysis",
+          "Relationship between leverage, EPS and EBIT",
+          "Leverage practical problems",
+        ],
+        [
+          "Time value of money and project cash flows",
+          "Payback and discounted payback period",
+          "NPV, profitability index and IRR",
+          "Mutually exclusive projects and capital rationing",
+          "Risk analysis and replacement decisions",
+        ],
+        [
+          "Dividend policy and determinants",
+          "Walter model and Gordon model",
+          "Modigliani-Miller dividend irrelevance",
+          "Dividend payout, retention and growth",
+          "Bonus issues, share splits and practical valuation",
+        ],
+        [
+          "Operating cycle and working capital estimation",
+          "Cash management and cash budget",
+          "Inventory management and receivables management",
+          "Payables, short-term finance and working capital policies",
+          "Working capital forecasting and numerical problems",
+        ],
+      ],
+      law: [
+        [
+          "Definitions, classes of companies and key terminology",
+          "Private, public, one-person and small companies",
+          "Holding, subsidiary, associate and government companies",
+          "Doctrine of corporate personality and lifting of veil",
+        ],
+        [
+          "Promoters and pre-incorporation contracts",
+          "Memorandum of Association and its alteration",
+          "Articles of Association and their alteration",
+          "Incorporation procedure and certificate",
+          "Commencement of business, registered office and conversion",
+        ],
+        [
+          "Public offer, private placement and rights issue",
+          "Contents and registration of prospectus",
+          "Misstatement, civil and criminal liability",
+          "Allotment procedure and return of allotment",
+          "Dematerialisation and offer-for-sale provisions",
+        ],
+        [
+          "Kinds of share capital and voting rights",
+          "Issue at premium, sweat equity and employee stock options",
+          "Further issue, rights issue and bonus shares",
+          "Transfer, transmission and alteration of share capital",
+          "Debentures, debenture trustee and redemption",
+        ],
+        [
+          "Meaning of deposit and exempt receipts",
+          "Acceptance from members and public",
+          "Deposit insurance, repayment reserve and trustee",
+          "Circular, filing and return of deposits",
+          "Default, repayment and penalties",
+        ],
+        [
+          "Meaning and types of charges",
+          "Registration and modification of charge",
+          "Satisfaction of charge and register of charges",
+          "Consequences of non-registration",
+          "Rectification and practical filing provisions",
+        ],
+        [
+          "Register of members and beneficial ownership",
+          "Annual return and maintenance of records",
+          "Annual general meeting and extraordinary general meeting",
+          "Notice, quorum, proxy, voting and resolutions",
+          "Minutes, postal ballot and meeting compliance",
+        ],
+        [
+          "Sources and conditions for declaration of dividend",
+          "Transfer to reserves and unpaid dividend account",
+          "Interim dividend and final dividend",
+          "IEPF, unclaimed dividend and shareholder rights",
+          "Penalties and practical compliance",
+        ],
+        [
+          "Books of account and place of maintenance",
+          "Financial statements and board approval",
+          "Board's report and filing requirements",
+          "Reopening and revision of accounts",
+          "Corporate social responsibility and relevant disclosures",
+        ],
+        [
+          "Appointment and rotation of auditors",
+          "Eligibility, qualifications and disqualifications",
+          "Removal, resignation and remuneration",
+          "Auditor rights, duties and reporting obligations",
+          "Prohibited services and branch audit",
+        ],
+        [
+          "Meaning of foreign company and place of business",
+          "Documents and registration requirements",
+          "Accounts, annual return and reporting",
+          "Prospectus and display of company details",
+          "Penalties and compliance obligations",
+        ],
+        [
+          "Nature and essential features of LLP",
+          "Incorporation, designated partners and LLP agreement",
+          "Partners, contribution and liability",
+          "Accounts, audit and annual return",
+          "Conversion, compromise and winding up",
+        ],
+        [
+          "Purpose, application and key definitions",
+          "Commencement, repeal and revival of enactments",
+          "Powers, appointments and substitution of authorities",
+          "Computation of time and service by post",
+          "Sections 6, 7, 24 and practical interpretation",
+        ],
+        [
+          "Literal and reasonable construction",
+          "Harmonious construction and mischief rule",
+          "Ejusdem generis and noscitur a sociis",
+          "Internal and external aids to interpretation",
+          "Mandatory/directory provisions and practical case studies",
+        ],
+        [
+          "Objectives, definitions and authorised persons",
+          "Current account and capital account transactions",
+          "Acquisition/transfer of foreign exchange",
+          "Residential status and overseas transactions",
+          "Contravention, penalties, adjudication and appeals",
+        ],
+      ],
+      gst: [
+        [
+          "Constitutional background and GST framework",
+          "CGST, SGST, UTGST and IGST",
+          "GST Council, GSTN and registration overview",
+          "Advantages, scope and key definitions",
+        ],
+        [
+          "Meaning and scope of supply",
+          "Consideration and business connection",
+          "Schedule I deemed supplies",
+          "Schedule II classification and Schedule III exclusions",
+          "Composite supply versus mixed supply",
+        ],
+        [
+          "Levy and collection under CGST/IGST",
+          "Reverse charge mechanism",
+          "Composition levy and eligibility",
+          "E-commerce operator liability",
+          "Tax rate, person liable and practical computation",
+        ],
+        [
+          "Place of supply of goods",
+          "Place of supply of domestic services",
+          "Place of supply for cross-border services",
+          "Special cases: immovable property, transport and events",
+          "Inter-state versus intra-state classification",
+        ],
+        [
+          "Absolute and conditional exemptions",
+          "Exemptions relating to healthcare and education",
+          "Exemptions for transportation and agriculture",
+          "Government, financial and charitable services",
+          "Interpretation and practical exemption cases",
+        ],
+        [
+          "Time of supply of goods",
+          "Time of supply of services",
+          "Reverse charge and voucher rules",
+          "Change in tax rate",
+          "Residual provisions and practical timelines",
+        ],
+        [
+          "Transaction value and conditions",
+          "Inclusions and exclusions from value",
+          "Discounts, incidental expenses and subsidies",
+          "Valuation between related/distinct persons",
+          "Residual valuation rules and practical computation",
+        ],
+        [
+          "Eligibility and conditions for input tax credit",
+          "Blocked credits and restrictions",
+          "Apportionment for exempt/non-business supplies",
+          "Reversal, re-availment and payment to supplier",
+          "Special cases, capital goods and ITC reconciliation",
+        ],
+        [
+          "Persons liable and threshold limits",
+          "Compulsory registration and exemptions",
+          "Voluntary registration and distinct persons",
+          "Registration procedure and amendment",
+          "Cancellation, revocation and effective dates",
+        ],
+        [
+          "Tax invoice: contents and time limits",
+          "Bill of supply and receipt voucher",
+          "Credit notes, debit notes and revised invoices",
+          "E-invoicing requirements",
+          "Document retention and practical cases",
+        ],
+        [
+          "Books and records to be maintained",
+          "Stock, production and input credit records",
+          "Electronic records and retention period",
+          "Records of agents, transporters and warehouse operators",
+          "Verification and compliance obligations",
+        ],
+        [
+          "When an e-way bill is required",
+          "Generation, validity and cancellation",
+          "Part A/Part B and transporter details",
+          "Exceptions and special situations",
+          "Interception, verification and penalties",
+        ],
+        [
+          "Electronic cash, credit and liability ledgers",
+          "Utilisation order of ITC",
+          "Interest, penalty and payment methods",
+          "Payment under reverse charge and composition",
+          "Challan, due dates and practical set-off",
+        ],
+        [
+          "TDS applicability, deductor and rate",
+          "TDS deduction, deposit and certificates",
+          "TCS by e-commerce operators",
+          "Statements, reconciliation and credit to suppliers",
+          "Non-compliance and practical cases",
+        ],
+        [
+          "GSTR-1 and outward supply reporting",
+          "GSTR-3B and payment reconciliation",
+          "Annual return and other periodic returns",
+          "Due dates, late fees and interest",
+          "Amendments, matching and return-filing practice",
+        ],
+      ],
+      sm: [
+        [
+          "Meaning, need and levels of strategy",
+          "Vision, mission, goals and objectives",
+          "Strategic management process",
+          "Business policy and competitive advantage",
+          "Strategic intent and strategic decision-making",
+        ],
+        [
+          "Macro-environment and PESTLE analysis",
+          "Industry analysis and Porter's Five Forces",
+          "Competitor, customer and market analysis",
+          "Opportunities, threats and external factor evaluation",
+          "Scenario planning and environmental forecasting",
+        ],
+        [
+          "Resources, capabilities and core competencies",
+          "Value-chain analysis",
+          "SWOT and internal factor evaluation",
+          "Benchmarking and organisational culture",
+          "Functional capabilities and competitive strengths",
+        ],
+        [
+          "Corporate-level strategies: growth, stability and retrenchment",
+          "Business-level strategies: cost leadership and differentiation",
+          "Diversification, integration and strategic alliances",
+          "BCG, GE and other portfolio matrices",
+          "Strategy selection, suitability and feasibility",
+        ],
+        [
+          "Strategy implementation and organisational structure",
+          "Leadership, culture and change management",
+          "Resource allocation and functional policies",
+          "Strategic control, evaluation and corrective action",
+          "Balanced scorecard, KPIs and continuous improvement",
+        ],
+      ],
+    };
+    const PALETTE = ["#183f30", "#a66b16", "#315f78", "#a13b2d", "#708b51", "#87618c", "#45938a", "#b27b43"];
+    function ensureExtras() {
+      state.topic = state.topic || {};
+      state.tests = state.tests || [];
+      for (const k of ROT)
+        for (let i = 0; i < DATA[k].list.length; i++) {
+          const id = iid(k, i),
+            topics = CHAPTER_TOPICS[k]?.[i] || [];
+          if (studied(id) && topics.length && !topics.some((_, j) => state.topic[id + "#" + j]))
+            for (let j = 0; j < topics.length; j++)
+              state.topic[id + "#" + j] = { doneAt: state.item[id].studiedAt || TODAY() };
+        }
+    }
+    function chapterTopics(id) {
+      const x = info(id);
+      return x && x.type === "deep" ? CHAPTER_TOPICS[x.subject]?.[x.index] || [] : [];
+    }
+    function chapterProgress(id) {
+      const topics = chapterTopics(id),
+        done = topics.filter((_, i) => !!state.topic[id + "#" + i]).length;
+      return {
+        done,
+        total: topics.length,
+        pct: topics.length ? Math.round((done / topics.length) * 100) : studied(id) ? 100 : 0,
+      };
+    }
+    function totalProgress() {
+      let done = 0,
+        total = 0;
+      for (const k of KEYS) {
+        const c = comp(k);
+        done += c.done;
+        total += c.total;
+      }
+      return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+    }
+    function comp(k) {
+      if (DATA[k].type === "daily") {
+        let total = DATA[k].list.length,
+          done = DATA[k].list.filter((_, i) => studied(iid(k, i))).length;
+        return {
+          total,
+          done,
+          pct: Math.round((done / total) * 100),
+          chaptersDone: done,
+          chaptersTotal: total,
+        };
+      }
+      let done = 0,
+        total = 0,
+        chaptersDone = 0;
+      for (let i = 0; i < DATA[k].list.length; i++) {
+        const p = chapterProgress(iid(k, i));
+        done += p.done;
+        total += p.total;
+        if (studied(iid(k, i))) chaptersDone++;
+      }
+      return {
+        total,
+        done,
+        pct: total ? Math.round((done / total) * 100) : 0,
+        chaptersDone,
+        chaptersTotal: DATA[k].list.length,
+      };
+    }
+    function plan() {
+      const d = TODAY();
+      if (!state.plans[d])
+        state.plans[d] = { audit: next("audit"), income_tax: next("income_tax"), deep: deepPick() };
+      const p = state.plans[d];
+      if (p.deep && studied(p.deep)) p.deep = deepPick();
+      if (!p.audit && !next("audit")) p.audit = null;
+      if (!p.income_tax && !next("income_tax")) p.income_tax = null;
+      return p;
+    }
+    function mark(id) {
+      const x = info(id),
+        r = state.item[id] || {};
+      if (!x) return;
+      if (x.type === "deep") {
+        const topics = chapterTopics(id);
+        for (let j = 0; j < topics.length; j++)
+          if (!state.topic[id + "#" + j]) state.topic[id + "#" + j] = { doneAt: TODAY() };
+      }
+      if (!r.studiedAt) {
+        r.studiedAt = TODAY();
+        r.stage = 1;
+        r.nextDue = add(TODAY(), 1);
+        r.revisions = 0;
+        r.history = (r.history || []).concat({ date: TODAY(), kind: "studied" });
+        state.item[id] = r;
+        if (x.type === "deep") {
+          let at = ROT.indexOf(x.subject);
+          if (at >= 0) state.rot = (at + 1) % ROT.length;
+        }
+      }
+      plan();
+      save();
+      render();
+    }
+    function toggleTopic(id, index, checked) {
+      ensureExtras();
+      openChapterId = id;
+      const key = id + "#" + index;
+      if (checked) state.topic[key] = { doneAt: TODAY() };
+      else delete state.topic[key];
+      const p = chapterProgress(id),
+        r = state.item[id];
+      if (p.done === p.total && p.total && !studied(id)) {
+        mark(id);
+        return;
+      }
+      if (p.done < p.total && r?.studiedAt) {
+        r.studiedAt = null;
+        r.nextDue = null;
+        r.history = (r.history || []).concat({ date: TODAY(), kind: "reopened" });
+        const x = info(id);
+        state.rot = ROT.indexOf(x.subject);
+        state.plans[TODAY()] = state.plans[TODAY()] || {};
+        state.plans[TODAY()].deep = id;
+      }
+      save();
+      render();
+    }
+    function task(kind, id, min) {
+      const x = info(id),
+        label =
+          kind === "audit"
+            ? "Daily Audit topic"
+            : kind === "tax"
+              ? "Daily Income Tax topic"
+              : "4-hour deep-work chapter";
+      if (!x)
+        return `<div class="card task ${kind}"><div class="eyebrow">${label}</div><h3>Syllabus completed</h3><div class="meta">Every item in this stream is studied.</div></div>`;
+      if (kind !== "deep") {
+        const done = studied(id);
+        return `<div class="card task ${kind}"><div class="eyebrow">${label}</div><h3>${esc(x.name)}</h3><div class="meta">${esc(x.subjectName)} · ${esc(x.unit)}</div><div class="target">TARGET · ${min} MINUTES</div><div class="actions">${done ? `<span class="pill" style="color:var(--green)">COMPLETED TODAY ✓</span>` : `<button class="btn" data-start="${id}" data-min="${min}">Start timer</button><button class="btn alt" data-mark="${id}">Mark studied</button>`}</div></div>`;
+      }
+      const p = chapterProgress(id),
+        topics = chapterTopics(id);
+      return `<div class="card task deep"><div class="eyebrow">${label}</div><h3>${esc(x.name)}</h3><div class="meta">${esc(x.subjectName)} · ${esc(x.unit)}</div><div class="task-progress"><div class="meta"><span>${p.done}/${p.total} topics studied</span><span>${p.pct}%</span></div><div class="chapter-track"><i style="width:${p.pct}%"></i></div></div><div class="task-topics">${topics.map((t, j) => `<label class="subtopic ${state.topic[id + "#" + j] ? "done" : ""}"><input type="checkbox" data-topic="${id}" data-topic-index="${j}" ${state.topic[id + "#" + j] ? "checked" : ""}><span>${esc(t)}</span></label>`).join("")}</div><div class="actions"><button class="btn" data-start="${id}" data-min="${min}">Start ${min}-min timer</button><button class="btn alt" data-open-chapter="${id}">Open chapter</button></div></div>`;
+    }
+    function todayView() {
+      ensureExtras();
+      const p = plan(),
+        d = dues(),
+        overall = totalProgress(),
+        left = state.settings.exam ? Math.max(0, dif(state.settings.exam, TODAY())) : "—",
+        topicsToday = Object.values(state.topic).filter((t) => t.doneAt === TODAY()).length;
+      return (
+        header(
+          "Today’s Study Desk",
+          "tick individual topics; the rotation changes only when the full chapter is completed"
+        ) +
+        `<div class="grid stats"><div class="card stat"><b>Syllabus coverage</b><strong>${overall.pct}%</strong><small>${overall.done}/${overall.total} topics</small></div><div class="card stat"><b>Topics today</b><strong>${topicsToday}</strong><small>deep-work subtopics</small></div><div class="card stat"><b>Study today</b><strong>${(mins(TODAY()) / 60).toFixed(1)}h</strong><small>${mins(TODAY())} minutes</small></div><div class="card stat"><b>Due revisions</b><strong style="color:${d.length ? "var(--red)" : "var(--green)"}">${d.length}</strong><small>rate active recall</small></div><div class="card stat"><b>Days to exam</b><strong>${left}</strong><small>${state.settings.exam ? fmt(state.settings.exam) : "set in Settings"}</small></div></div><div class="grid today">${task("audit", p.audit, state.settings.audit)}${task("tax", p.income_tax, state.settings.tax)}${task("deep", p.deep, state.settings.deep)}</div><div class="grid two"><div class="card"><div class="head"><h2>Revision desk</h2><span>${d.length} due / overdue</span></div>${dueList(d.slice(0, 8))}</div><div class="card"><div class="head"><h2>Chapter-first rotation</h2><span>fixed cycle</span></div><div class="notice"><strong>Accounts → Costing → FM → Company & Other Law → GST → SM</strong><br><br>You can spend several days on one chapter. Tick its topics as you study them; the chapter is completed and the next subject appears only after the final topic is ticked.</div></div></div>`
+      );
+    }
+    let openChapterId = "";
+    function group(k) {
+      const s = DATA[k],
+        c = comp(k);
+      if (s.type === "daily") {
+        let rows = s.list
+          .map((_, i) => info(iid(k, i)))
+          .filter((x) => {
+            let r = state.item[x.id],
+              done = !!r?.studiedAt,
+              due = !!r?.nextDue && dif(r.nextDue, TODAY()) <= 0;
+            return (
+              (!search || `${x.name} ${x.unit}`.toLowerCase().includes(search.toLowerCase())) &&
+              (statusFilter === "all" ||
+                (statusFilter === "pending" && !done) ||
+                (statusFilter === "studied" && done) ||
+                (statusFilter === "due" && due))
+            );
+          })
+          .map((x) => {
+            let r = state.item[x.id],
+              done = !!r?.studiedAt,
+              due = !!r?.nextDue && dif(r.nextDue, TODAY()) <= 0;
+            return `<div class="item"><div class="tick ${done ? "done" : ""}">${done ? "✓" : x.index + 1}</div><div><b>${esc(x.name)}</b><small>${esc(x.unit)} · daily stream</small></div><span class="pill ${due ? "due" : ""}">${due ? "revision due" : done ? "studied" : "pending"}</span><span class="pill">${r?.revisions || 0} rev.</span><div>${done ? `<button class="btn alt small" data-revise="${x.id}">Revise</button>` : `<button class="btn small" data-mark="${x.id}">Studied</button>`}</div></div>`;
+          })
+          .join("");
+        return `<section class="subject"><div class="subject-head"><h3>${esc(s.name)}</h3><span>${c.done}/${c.total} topics · ${c.pct}%</span></div><div class="items">${rows || `<div class="empty">No matching items.</div>`}</div></section>`;
+      }
+      let rows = s.list
+        .map((_, i) => info(iid(k, i)))
+        .filter((x) => {
+          const p = chapterProgress(x.id),
+            r = state.item[x.id],
+            done = !!r?.studiedAt,
+            due = !!r?.nextDue && dif(r.nextDue, TODAY()) <= 0,
+            matches =
+              !search ||
+              `${x.name} ${chapterTopics(x.id).join(" ")}`
+                .toLowerCase()
+                .includes(search.toLowerCase());
+          return (
+            matches &&
+            (statusFilter === "all" ||
+              (statusFilter === "pending" && !done) ||
+              (statusFilter === "studied" && done) ||
+              (statusFilter === "due" && due))
+          );
+        })
+        .map((x) => {
+          const p = chapterProgress(x.id),
+            done = studied(x.id),
+            topics = chapterTopics(x.id),
+            opened = openChapterId === x.id || !!search;
+          return `<details class="chapter-box" ${opened ? "open" : ""}><summary><div class="tick ${done ? "done" : ""}">${done ? "✓" : x.index + 1}</div><div class="chapter-title">${esc(x.name)}<small>${p.done}/${p.total} topics · ${done ? "chapter completed" : p.done ? "in progress" : "not started"}</small></div><div class="chapter-track"><i style="width:${p.pct}%"></i></div><span class="pill">${p.pct}%</span></summary><div class="chapter-content">${topics.map((t, j) => `<label class="subtopic ${state.topic[x.id + "#" + j] ? "done" : ""}"><input type="checkbox" data-topic="${x.id}" data-topic-index="${j}" ${state.topic[x.id + "#" + j] ? "checked" : ""}><span>${esc(t)}</span><small>${state.topic[x.id + "#" + j] ? fmt(state.topic[x.id + "#" + j].doneAt).replace(/ \d{4}/, "") : ""}</small></label>`).join("")}${done ? `<button class="btn alt small" data-revise="${x.id}" style="margin-top:9px">Revise chapter</button>` : ""}</div></details>`;
+        })
+        .join("");
+      return `<section class="subject"><div class="subject-head"><h3>${esc(s.name)}</h3><span>${c.chaptersDone}/${c.chaptersTotal} chapters · ${c.done}/${c.total} topics · ${c.pct}%</span></div><div class="items">${rows || `<div class="empty">No matching chapters.</div>`}</div></section>`;
+    }
+    function practiceView() {
+      ensureExtras();
+      const rows = [...state.practice].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id)),
+        tests = [...state.tests].sort((a, b) => b.date.localeCompare(a.date));
+      return (
+        header(
+          "Practice, Tests & Error Ledger",
+          "record questions, mistakes and complete mock-test scores"
+        ) +
+        `<div class="grid practice"><div class="card"><div class="head"><h2>Post practice</h2><span>one entry</span></div><div class="form"><label>Subject<select class="field" id="pSubject">${KEYS.map((k) => `<option value="${k}">${esc(DATA[k].name)}</option>`).join("")}</select></label><label>Source<select class="field" id="pSource"><option>ICAI Module</option><option>RTP</option><option>MTP</option><option>PYQ</option><option>Question Bank</option><option>Mock Test</option></select></label><label>Questions<input class="field" id="pQ" type="number" min="1" value="10"></label><label>Correct<input class="field" id="pC" type="number" min="0" value="0"></label><label class="wide">Mistakes / notes<textarea class="field" id="pNotes" rows="3"></textarea></label><button class="btn wide" id="addPractice">Post practice</button></div><div class="practice-section"><div class="head"><h2>Post test result</h2><span>mock / chapter test</span></div><div class="form"><label>Subject<select class="field" id="testSubject">${KEYS.map((k) => `<option value="${k}">${esc(DATA[k].name)}</option>`).join("")}</select></label><label>Test name<input class="field" id="testName" placeholder="Mock 1 / Chapter test"></label><label>Marks scored<input class="field" id="testScore" type="number" min="0" placeholder="72"></label><label>Maximum marks<input class="field" id="testMax" type="number" min="1" value="100"></label><label class="wide">Date<input class="field" id="testDate" type="date" value="${TODAY()}"></label><button class="btn wide" id="addTest">Post test result</button></div></div></div><div><div class="card"><div class="head"><h2>Practice history</h2><span>${rows.reduce((a, b) => a + b.q, 0)} questions</span></div>${rows.length ? rows.map((p) => `<div class="row practice-row"><span>${fmt(p.date).replace(/ \d{4}/, "")}</span><span><strong>${esc(DATA[p.subject]?.short)}</strong> · ${esc(p.source)}<small class="meta">${esc(p.notes || "No notes")}</small></span><span>${p.correct}/${p.q}</span><span>${Math.round((p.correct / p.q) * 100)}%</span><button class="btn alt small" data-del-practice="${p.id}">×</button></div>`).join("") : `<div class="empty">No practice posted.</div>`}</div><div class="card" style="margin-top:15px"><div class="head"><h2>Test results</h2><span>${tests.length} attempts</span></div>${tests.length ? tests.map((t) => `<div class="test-row"><span>${fmt(t.date).replace(/ \d{4}/, "")}</span><span><strong>${esc(t.name)}</strong><br><small class="meta">${esc(DATA[t.subject]?.short)}</small></span><span>${t.score}/${t.max}</span><span>${Math.round((t.score / t.max) * 100)}%</span><button class="btn alt small" data-del-test="${t.id}">×</button></div>`).join("") : `<div class="empty">Add your first mock or chapter test.</div>`}</div></div></div>`
+      );
+    }
+    function svgLine(values, labels, color = "#183f30", unit = "") {
+      const w = 560,
+        h = 205,
+        left = 38,
+        right = 12,
+        top = 17,
+        bottom = 34,
+        max = Math.max(1, ...values),
+        x = (i) => left + i * ((w - left - right) / Math.max(1, values.length - 1)),
+        y = (v) => h - bottom - (v / max) * (h - top - bottom),
+        points = values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" "),
+        area = `${left},${h - bottom} ${points} ${x(values.length - 1)},${h - bottom}`,
+        step = Math.max(1, Math.ceil(labels.length / 6));
+      return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Study trend chart"><defs><linearGradient id="chartFill${color.replace("#", "")}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".24"/><stop offset="100%" stop-color="${color}" stop-opacity=".02"/></linearGradient></defs>${[0, 0.25, 0.5, 0.75, 1].map((v) => `<line x1="${left}" y1="${y(max * v)}" x2="${w - right}" y2="${y(max * v)}" stroke="#e8e1cf"/><text x="${left - 7}" y="${y(max * v) + 3}" text-anchor="end" font-size="8" fill="#686653">${Math.round(max * v)}${unit}</text>`).join("")}<polygon points="${area}" fill="url(#chartFill${color.replace("#", "")})"/><polyline points="${points}" fill="none" stroke="${color}" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="${color}"><title>${esc(labels[i])}: ${v}${unit}</title></circle>${i % step === 0 || i === labels.length - 1 ? `<text x="${x(i)}" y="${h - 10}" text-anchor="middle" font-size="8" fill="#686653">${esc(labels[i])}</text>` : ""}`).join("")}</svg>`;
+    }
+    function svgDonut(parts, centerLabel, centerSub) {
+      const valid = parts.filter((p) => p.value > 0),
+        total = valid.reduce((a, b) => a + b.value, 0) || 1,
+        r = 53,
+        circ = 2 * Math.PI * r;
+      let offset = 0;
+      const arcs = valid
+        .map((p) => {
+          let len = circ * (p.value / total),
+            out = `<circle cx="75" cy="75" r="${r}" fill="none" stroke="${p.color}" stroke-width="17" stroke-dasharray="${len} ${circ - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 75 75)"><title>${esc(p.name)}: ${p.value}</title></circle>`;
+          offset += len;
+          return out;
+        })
+        .join("");
+      return `<div class="donut-wrap"><svg viewBox="0 0 150 150" role="img" aria-label="${esc(centerSub)}"><circle cx="75" cy="75" r="${r}" fill="none" stroke="#e8e0ce" stroke-width="17"/>${arcs}<text x="75" y="73" text-anchor="middle" class="donut-center">${esc(centerLabel)}</text><text x="75" y="91" text-anchor="middle" class="donut-small">${esc(centerSub)}</text></svg><div>${parts.map((p) => `<div class="legend-line"><span><i class="legend-dot" style="background:${p.color}"></i>${esc(p.name)}</span><strong>${p.value}</strong></div>`).join("")}</div></div>`;
+    }
+    function accuracy(entries) {
+      let q = entries.reduce((a, b) => a + (b.q || 0), 0),
+        c = entries.reduce((a, b) => a + (b.correct || 0), 0);
+      return q ? Math.round((c / q) * 100) : 0;
+    }
+    function analyticsView() {
+      ensureExtras();
+      const overall = totalProgress(),
+        days = [];
+      for (let i = 13; i >= 0; i--) {
+        const d = add(TODAY(), -i);
+        days.push({
+          d,
+          label: new Date(d + "T12:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short" }),
+          minutes: mins(d),
+          questions: state.practice.filter((p) => p.date === d).reduce((a, b) => a + b.q, 0),
+          topics:
+            Object.values(state.topic).filter((t) => t.doneAt === d).length +
+            Object.values(state.item).filter((t) => t.studiedAt === d).length,
+        });
+      }
+      const p = plan(),
+        auditDone = !!p.audit && studied(p.audit),
+        taxDone = !!p.income_tax && studied(p.income_tax),
+        deepToday = Object.values(state.topic).filter((t) => t.doneAt === TODAY()).length,
+        commitments = Number(auditDone) + Number(taxDone) + Number(deepToday > 0),
+        qToday = state.practice.filter((x) => x.date === TODAY()).reduce((a, b) => a + b.q, 0),
+        testAvg = state.tests.length
+          ? Math.round(state.tests.reduce((a, t) => a + (t.score / t.max) * 100, 0) / state.tests.length)
+          : 0,
+        testsPassed = state.tests.filter((t) => t.score / t.max >= 0.4).length,
+        due = dues(),
+        revs = Object.values(state.item).reduce((a, b) => a + (b.revisions || 0), 0),
+        weak = Object.values(state.item).filter((r) => r.lastRating && r.lastRating <= 2).length;
+      const subjectMinutes = KEYS.map((k, i) => ({
+        name: DATA[k].short,
+        value: state.sessions.filter((s) => s.subject === k).reduce((a, b) => a + b.minutes, 0),
+        color: PALETTE[i % PALETTE.length],
+      })).filter((x) => x.value > 0);
+      const practiceBySource = ["ICAI Module", "RTP", "MTP", "PYQ", "Question Bank", "Mock Test"]
+        .map((name, i) => {
+          let arr = state.practice.filter((x) => x.source === name);
+          return {
+            name,
+            value: arr.reduce((a, b) => a + b.q, 0),
+            accuracy: accuracy(arr),
+            color: PALETTE[i % PALETTE.length],
+          };
+        })
+        .filter((x) => x.value);
+      const testValues = state.tests
+        .slice()
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((t) => Math.round((t.score / t.max) * 100)),
+        testLabels = state.tests
+          .slice()
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map((t, i) => t.name || "Test " + (i + 1));
+      const pending = Math.max(0, overall.total - overall.done),
+        bestSubject = KEYS.map((k) => ({ k, c: comp(k) })).sort((a, b) => b.c.pct - a.c.pct)[0],
+        worstSubject = KEYS.map((k) => ({ k, c: comp(k) }))
+          .filter((x) => x.c.pct < 100)
+          .sort((a, b) => a.c.pct - b.c.pct)[0];
+      return (
+        header(
+          "Performance Analysis",
+          "today’s execution, syllabus coverage, chapter mastery, revisions and test scores"
+        ) +
+        `<div class="grid stats"><div class="card stat"><b>Syllabus completed</b><strong>${overall.pct}%</strong><small>${overall.done}/${overall.total} topics</small></div><div class="card stat"><b>Today’s commitments</b><strong>${commitments}/3</strong><small>Audit · Tax · deep work</small></div><div class="card stat"><b>Practice accuracy</b><strong>${accuracy(state.practice)}%</strong><small>${state.practice.reduce((a, b) => a + b.q, 0)} questions</small></div><div class="card stat"><b>Average test score</b><strong>${state.tests.length ? testAvg + "%" : "—"}</strong><small>${state.tests.length} recorded tests</small></div><div class="card stat"><b>Revision backlog</b><strong style="color:${due.length ? "var(--red)" : "var(--green)"}">${due.length}</strong><small>${weak} weak recall items</small></div></div>
+<div class="analysis-grid"><div class="card chart-box"><div class="head"><h2>Study-time trend</h2><span>last 14 days · minutes</span></div>${svgLine(
+          days.map((d) => d.minutes),
+          days.map((d) => d.label),
+          "#183f30"
+        )}<div class="chart-legend"><span><i class="legend-dot" style="background:#183f30"></i>Focused minutes posted through the study timer</span></div></div><div class="card chart-box"><div class="head"><h2>Syllabus completion</h2><span>topic-weighted</span></div>${svgDonut(
+          [
+            { name: "Studied", value: overall.done, color: "#183f30" },
+            { name: "Pending", value: pending, color: "#d8cfb8" },
+          ],
+          overall.pct + "%",
+          "coverage"
+        )}<div class="day-activity"><span>${overall.done} completed</span><span>${pending} remaining</span><span>${revs} revisions</span></div></div></div>
+<div class="analysis-grid equal"><div class="card"><div class="head"><h2>Today’s execution</h2><span>${fmt(TODAY())}</span></div><div class="metric-strip"><div class="micro"><b>${(mins(TODAY()) / 60).toFixed(1)}h</b><span>study time</span></div><div class="micro"><b>${deepToday}</b><span>deep topics</span></div><div class="micro"><b>${qToday}</b><span>questions</span></div><div class="micro"><b>${commitments}/3</b><span>commitments</span></div></div>${svgDonut(
+          [
+            { name: "Completed", value: commitments, color: "#183f30" },
+            { name: "Remaining", value: 3 - commitments, color: "#d8cfb8" },
+          ],
+          Math.round((commitments / 3) * 100) + "%",
+          "today"
+        )}<div class="day-activity"><span>${auditDone ? "✓" : "○"} Audit</span><span>${taxDone ? "✓" : "○"} Income Tax</span><span>${deepToday ? "✓" : "○"} Deep chapter</span></div></div><div class="card"><div class="head"><h2>Subject progress</h2><span>topic-weighted</span></div>${KEYS.map(
+          (k, i) => {
+            let c = comp(k);
+            return `<div class="subject-meter"><strong>${esc(DATA[k].short)}</strong><div class="barbox"><div class="bar" style="width:${c.pct}%;background:${PALETTE[i % PALETTE.length]}"></div></div><small>${c.pct}%</small></div>`;
+          }
+        ).join(
+          ""
+        )}<div class="meta" style="margin-top:9px">Deep subjects count individual chapter topics; Audit and Tax count daily topics.</div></div></div>
+<div class="analysis-grid"><div class="card chart-box"><div class="head"><h2>Practice-volume trend</h2><span>questions per day</span></div>${svgLine(
+          days.map((d) => d.questions),
+          days.map((d) => d.label),
+          "#315f78"
+        )}</div><div class="card chart-box"><div class="head"><h2>Study-time allocation</h2><span>all logged sessions</span></div>${subjectMinutes.length ? svgDonut(subjectMinutes, String(state.sessions.reduce((a, b) => a + b.minutes, 0)), "minutes") : `<div class="empty">Start the timer to see which subjects receive your study time.</div>`}</div></div>
+<div class="analysis-grid equal"><div class="card"><div class="head"><h2>Mock & test performance</h2><span>${state.tests.length} attempts</span></div>${state.tests.length ? `${svgLine(testValues, testLabels, "#a66b16", "%")}<div class="metric-strip"><div class="micro"><b>${testAvg}%</b><span>average</span></div><div class="micro"><b>${Math.max(...testValues)}%</b><span>best</span></div><div class="micro"><b>${testsPassed}</b><span>passed</span></div><div class="micro"><b>${state.tests.length - testsPassed}</b><span>below 40%</span></div></div>` : `<div class="empty">Add mock tests or chapter tests from the Practice tab to unlock your score trend.</div>`}</div><div class="card"><div class="head"><h2>Practice-source analysis</h2><span>accuracy by source</span></div>${practiceBySource.length ? practiceBySource.map((p) => `<div class="subject-meter"><strong>${esc(p.name)}</strong><div class="barbox"><div class="bar" style="width:${p.accuracy}%;background:${p.color}"></div></div><small>${p.accuracy}%</small></div><div class="meta" style="margin:-3px 0 5px 0">${p.value} questions attempted</div>`).join("") : `<div class="empty">Log ICAI Module, RTP, MTP, PYQ or Question Bank practice to see source-wise accuracy.</div>`}</div></div>
+<div class="analysis-grid equal"><div class="card"><div class="head"><h2>Revision health</h2><span>spaced-repetition standing</span></div>${svgDonut(
+          [
+            { name: "Overdue / due", value: due.length, color: "#a13b2d" },
+            { name: "Weak recall", value: weak, color: "#a66b16" },
+            {
+              name: "Healthy",
+              value: Math.max(
+                0,
+                Object.values(state.item).filter((r) => r.studiedAt).length - due.length - weak
+              ),
+              color: "#183f30",
+            },
+          ],
+          String(revs),
+          "revisions"
+        )}<div class="day-activity"><span>${due.length} need attention</span><span>${weak} rated 1–2</span></div></div><div class="card"><div class="head"><h2>Automatic insights</h2><span>based on your actual data</span></div>${due.length ? `<div class="insight bad">${due.length} revision${due.length > 1 ? "s are" : " is"} due. Clear this queue before adding too much new material.</div>` : `<div class="insight">Your revision queue is currently clear.</div>`}${worstSubject ? `<div class="insight warn">${esc(DATA[worstSubject.k].name)} is your least-covered subject at ${worstSubject.c.pct}%.</div>` : ""}${bestSubject && bestSubject.c.pct ? `<div class="insight">Your strongest coverage is ${esc(DATA[bestSubject.k].name)} at ${bestSubject.c.pct}%.</div>` : ""}${state.tests.length ? `<div class="insight ${testAvg < 50 ? "warn" : ""}">Your average test performance is ${testAvg}%; ${testsPassed} of ${state.tests.length} tests are at or above 40%.</div>` : `<div class="insight warn">No test results have been entered yet, so exam-performance trends cannot be measured.</div>`}</div></div>`
+      );
+    }
+    const originalBind = bind;
+    bind = function () {
+      ensureExtras();
+      originalBind();
+      document
+        .querySelectorAll("[data-topic]")
+        .forEach(
+          (b) =>
+            (b.onchange = () => toggleTopic(b.dataset.topic, Number(b.dataset.topicIndex), b.checked))
+        );
+      document.querySelectorAll("[data-open-chapter]").forEach(
+        (b) =>
+        (b.onclick = () => {
+          openChapterId = b.dataset.openChapter;
+          subjectFilter = info(openChapterId).subject;
+          state.view = "syllabus";
+          render();
+        })
+      );
+      const at = document.getElementById("addTest");
+      if (at)
+        at.onclick = () => {
+          const score = Number(document.getElementById("testScore").value),
+            max = Number(document.getElementById("testMax").value),
+            name = document.getElementById("testName").value.trim() || "Practice test";
+          if (!max || score < 0 || score > max) return alert("Enter valid marks and maximum marks.");
+          state.tests.push({
+            id: uid(),
+            date: document.getElementById("testDate").value || TODAY(),
+            subject: document.getElementById("testSubject").value,
+            name,
+            score,
+            max,
+          });
+          save();
+          render();
+        };
+      document.querySelectorAll("[data-del-test]").forEach(
+        (b) =>
+        (b.onclick = () => {
+          state.tests = state.tests.filter((x) => x.id !== b.dataset.delTest);
+          save();
+          render();
+        })
+      );
+    };
+    ensureExtras();
+    render();
+  </script>
+</body>
+
+</html>

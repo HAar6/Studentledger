@@ -1,0 +1,14 @@
+{
+  "name": "the-study-ledger",
+  "version": "1.0.0",
+  "description": "The Study Ledger - Digital Study & Revision Ledger for CA Intermediate students",
+  "main": "backend/server.js",
+  "scripts": {
+    "postinstall": "cd backend && npm install",
+    "start": "node backend/server.js",
+    "backend": "cd backend && npm start",
+    "dev": "cd backend && npm run dev"
+  },
+  "author": "KUNDAN TRADING COMPANY",
+  "license": "ISC"
+}

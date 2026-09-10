@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Privacy Policy — The Study Ledger</title>
+  <link rel="icon" type="image/svg+xml" sizes="any"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23113325'/%3E%3Cpath d='M17 13h25a6 6 0 0 1 6 6v31H22a6 6 0 0 1-6-6V14a1 1 0 0 1 1-1Z' fill='%23fffaf0'/%3E%3Cpath d='M16 42a7 7 0 0 1 7-7h25M25 22h15M25 28h11' fill='none' stroke='%23113426' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='m27 43 5 5 10-12' fill='none' stroke='%23d49b38' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #f5f0e4;
+      --card: #fdfbf7;
+      --ink: #19241b;
+      --muted: #6b6854;
+      --green: #113426;
+      --line: #ded3b8;
+      --font-serif: 'Lora', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    body:before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0 31px, rgba(30, 42, 33, 0.022) 32px);
+      pointer-events: none;
+    }
+    .topbar {
+      background: linear-gradient(180deg, #113426 0%, #0d281d 100%);
+      color: #f7f2e4;
+      padding: 14px 24px;
+      border-bottom: 2px solid #091c14;
+    }
+    .topbar-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .container {
+      max-width: 860px;
+      margin: 40px auto 60px;
+      padding: 0 24px;
+      flex: 1;
+    }
+    .policy-card {
+      background: var(--card);
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 38px 44px;
+      box-shadow: 0 10px 30px rgba(25, 36, 27, 0.06);
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 6px;
+    }
+    .sub {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+    }
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      color: var(--green);
+      margin: 26px 0 10px;
+    }
+    p { margin-bottom: 14px; font-size: 14px; color: #2a382c; }
+    ul { margin: 10px 0 18px 24px; font-size: 14px; color: #2a382c; }
+    li { margin-bottom: 6px; }
+    .footer {
+      background: #113426;
+      color: #e5ede7;
+      padding: 30px 24px;
+      margin-top: auto;
+      border-top: 1px solid #0a2017;
+      font-size: 12.5px;
+    }
+    .footer-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-links a {
+      color: #b7d6c2;
+      text-decoration: none;
+      margin-left: 18px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .footer-links a:hover { color: #fff; text-decoration: underline; }
+    @media (max-width: 600px) { .policy-card { padding: 24px 20px; } }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="dashboard.html" class="brand">
+        <svg width="28" height="28" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#fffaf0"/><path d="M17 13h25a6 6 0 0 1 6 6v31H22a6 6 0 0 1-6-6V14a1 1 0 0 1 1-1Z" fill="#113426"/><path d="M16 42a7 7 0 0 1 7-7h32M25 22h15M25 28h11" fill="none" stroke="#113426" stroke-width="3" stroke-linecap="round"/><path d="m27 43 5 5 10-12" fill="none" stroke="#d49b38" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>The Study Ledger</span>
+      </a>
+      <a href="dashboard.html" style="color: #b7d6c2; font-family: var(--font-mono); font-size: 12px; text-decoration: none;">← Return to Home</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="policy-card">
+      <h1>Privacy Policy</h1>
+      <div class="sub">Effective Date: September 2026 · Merchant: KUNDAN TRADING COMPANY · Data Protection Guidelines</div>
+
+      <div class="privacy-badge">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        <span>Your data belongs solely to you. Operated with integrity by <b>KUNDAN TRADING COMPANY</b>. We never sell student records or revision logs.</span>
+      </div>
+
+      <h2>1. Information We Collect</h2>
+      <p>
+        When you register for an account or purchase a subscription license for <b>The Study Ledger</b>, we may collect the following personal information:
+      </p>
+      <ul>
+        <li><b>Account Information:</b> Full name, email address, and encrypted authentication password.</li>
+        <li><b>Study Progress Data:</b> Chapter revision records, mock exam scores, and study timer logs.</li>
+        <li><b>Transaction Identifiers:</b> Payment status, order ID, plan type, and 12-digit UPI UTR reference number.</li>
+      </ul>
+
+      <h2>2. Payment Information & Security</h2>
+      <p>
+        All digital payment transactions are encrypted using industry-standard 256-bit SSL encryption. Online card and netbanking payments are securely processed by <b>Razorpay</b> under strict RBI guidelines and PCI-DSS Level 1 compliance. <b>We do not store complete card numbers, CVVs, or bank PINs on our servers.</b>
+      </p>
+
+      <h2>3. How We Use Your Information</h2>
+      <ul>
+        <li>To provide, maintain, and activate your study ledger software license.</li>
+        <li>To sync your revision calendar and study intervals across your devices.</li>
+        <li>To issue official invoices and receipts for subscription fees.</li>
+        <li>To provide customer support and critical syllabus update notifications.</li>
+      </ul>
+
+      <h2>4. Data Retention & Protection</h2>
+      <p>
+        Your study records and account details are stored securely. We do not sell, rent, or trade your personal information to any third parties or advertising brokers.
+      </p>
+
+      <h2>5. Contacting Us About Privacy</h2>
+      <p>
+        If you have any questions regarding this Privacy Policy or wish to delete your account data, please email our Data Privacy Officer at <a href="mailto:harshity16@gmail.com" style="color: var(--green);">harshity16@gmail.com</a>.
+      </p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>© 2026 The Study Ledger (KUNDAN TRADING COMPANY). All rights reserved.</div>
+      <div class="footer-links">
+        <a href="return.html">Return Policy</a>
+        <a href="refund.html">Refund Policy</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="disclaimer.html">Disclaimer</a>
+        <a href="about.html">About & Contact</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="shipping.html">Delivery Policy</a>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>
