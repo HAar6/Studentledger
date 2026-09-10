@@ -1,28 +1,27 @@
 const express = require("express");
 const crypto = require("crypto");
+const Razorpay = require("razorpay");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 
 const router = express.Router();
 
-// Lazy load Razorpay if keys exist
-let razorpayInstance = null;
-function getRazorpay() {
-  if (!razorpayInstance && process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-    try {
-      const Razorpay = require("razorpay");
-      razorpayInstance = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET,
-      });
-    } catch (e) {
-      console.warn("Razorpay package error:", e.message);
-    }
+// Initialize Razorpay instance helper
+function getRazorpayInstance() {
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!key_id || !key_secret) {
+    return null;
   }
-  return razorpayInstance;
+
+  return new Razorpay({
+    key_id,
+    key_secret,
+  });
 }
 
-// 1. GET PUBLIC PAYMENT CONFIG
+// 1. GET PAYMENT CONFIG
 router.get("/config", (req, res) => {
   res.json({
     merchantName: process.env.MERCHANT_NAME || "KUNDAN TRADING COMPANY",
@@ -35,11 +34,219 @@ router.get("/config", (req, res) => {
   });
 });
 
-// 2. SUBMIT DIRECT UPI PAYMENT (UTR 12-Digit Reference Number)
+// 2. CREATE ORDER (POST /api/create-order & POST /api/payment/create-order)
+const createOrderHandler = async (req, res) => {
+  try {
+    const { amount, currency = "INR", receipt, plan = "monthly" } = req.body;
+
+    // Determine amount in paise (minimum 100 paise)
+    let amountInPaise;
+    if (amount !== undefined && amount !== null && amount !== "") {
+      const parsed = Number(amount);
+      if (isNaN(parsed) || parsed < 100) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid amount. Minimum amount is 100 paise (₹1.00).",
+        });
+      }
+      amountInPaise = Math.round(parsed);
+    } else {
+      // Default to plan amount if amount not directly specified: 39 INR = 3900 paise, 299 INR = 29900 paise
+      amountInPaise = plan === "annual" ? 29900 : 3900;
+    }
+
+    const key_id = process.env.RAZORPAY_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!key_id || !key_secret) {
+      return res.status(401).json({
+        success: false,
+        error: "Razorpay credentials not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.",
+      });
+    }
+
+    const razorpay = getRazorpayInstance();
+    if (!razorpay) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to initialize Razorpay SDK client.",
+      });
+    }
+
+    const orderReceipt = receipt || `rcpt_${Date.now().toString().slice(-8)}`;
+    const options = {
+      amount: amountInPaise,
+      currency: currency || "INR",
+      receipt: orderReceipt,
+      payment_capture: 1,
+      notes: {
+        product: "The Study Ledger License",
+        plan: plan || "monthly",
+      },
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    return res.status(200).json({
+      success: true,
+      order_id: order.id,
+      orderId: order.id,
+      id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key_id: key_id,
+      keyId: key_id,
+      receipt: order.receipt,
+      plan,
+    });
+  } catch (error) {
+    console.error("Razorpay order creation error:", error);
+
+    // Handle authentication / invalid credentials
+    if (error.statusCode === 401 || (error.error && error.error.code === "BAD_REQUEST_ERROR" && error.error.description?.includes("key"))) {
+      return res.status(401).json({
+        success: false,
+        error: "Razorpay authentication failed. Please check your API keys.",
+        details: error.message || error.error?.description,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Failed to create Razorpay payment order: " + (error.error?.description || error.message),
+    });
+  }
+};
+
+router.post("/create-order", createOrderHandler);
+
+// 3. VERIFY PAYMENT SIGNATURE (POST /api/verify-payment & POST /api/payment/verify-payment & POST /api/payment/verify-razorpay)
+const verifyPaymentHandler = async (req, res) => {
+  try {
+    const order_id = req.body.razorpay_order_id || req.body.order_id;
+    const payment_id = req.body.razorpay_payment_id || req.body.payment_id;
+    const razorpay_signature = req.body.razorpay_signature || req.body.signature;
+
+    const {
+      plan = "monthly",
+      customerName = "CA Student",
+      customerEmail = "student@studyledger.com",
+    } = req.body;
+
+    // Validate required fields
+    if (!order_id || !payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required payment authorization fields. Both order_id, payment_id, and razorpay_signature are required.",
+      });
+    }
+
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) {
+      return res.status(500).json({
+        success: false,
+        error: "Server configuration error: RAZORPAY_KEY_SECRET is missing.",
+      });
+    }
+
+    // Step 3 HMAC-SHA256 Algorithm: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
+    const bodyToSign = `${order_id}|${payment_id}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(bodyToSign)
+      .digest("hex");
+
+    // Secure timing comparison with length guard
+    const expectedBuffer = Buffer.from(expectedSignature, "utf-8");
+    const receivedBuffer = Buffer.from(razorpay_signature, "utf-8");
+
+    const isSignatureValid =
+      expectedBuffer.length === receivedBuffer.length &&
+      crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+
+    if (!isSignatureValid) {
+      return res.status(400).json({
+        success: false,
+        status: "failure",
+        error: "Payment verification failed. Cryptographic signature mismatch. Account was NOT credited.",
+      });
+    }
+
+    // Payment successfully verified! Activate user license
+    const amountInRupees = plan === "annual" ? 299 : 39;
+    const durationDays = plan === "annual" ? 365 : 30;
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+    const txnId = `SL-RZP-${payment_id}`;
+
+    try {
+      const paymentRecord = new Payment({
+        transactionId: txnId,
+        customerName,
+        customerEmail: customerEmail.toLowerCase().trim(),
+        plan,
+        amount: amountInRupees,
+        currency: "INR",
+        paymentMethod: "Razorpay Standard Checkout",
+        razorpayOrderId: order_id,
+        razorpayPaymentId: payment_id,
+        razorpaySignature: razorpay_signature,
+        status: "completed",
+        activatedAt: now,
+        expiresAt,
+      });
+      await paymentRecord.save();
+
+      if (customerEmail) {
+        await User.findOneAndUpdate(
+          { email: customerEmail.toLowerCase().trim() },
+          {
+            isSubscribed: true,
+            subscriptionPlan: plan,
+            subscriptionExpiresAt: expiresAt,
+            subscriptionTxnId: txnId,
+          }
+        );
+      }
+    } catch (dbError) {
+      console.warn("Database record write warning:", dbError.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      status: "success",
+      message: "Payment successfully verified and software license activated!",
+      payment_id,
+      order_id,
+      license: {
+        transactionId: txnId,
+        paymentId: payment_id,
+        orderId: order_id,
+        plan,
+        amount: amountInRupees,
+        customerName,
+        customerEmail,
+        status: "active",
+        activatedAt: now.toISOString(),
+        expiresAt: expiresAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("Signature verification error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error during verification: " + error.message,
+    });
+  }
+};
+
+router.post("/verify-payment", verifyPaymentHandler);
+router.post("/verify-razorpay", verifyPaymentHandler);
+
+// 4. DIRECT UPI SUBMISSION FALLBACK (Optional manual backup)
 router.post("/submit-upi", async (req, res) => {
   try {
     const { utr, plan = "monthly", customerName = "CA Student", customerEmail = "student@studyledger.com" } = req.body;
-
     if (!utr || String(utr).trim().length < 6) {
       return res.status(400).json({
         success: false,
@@ -54,42 +261,9 @@ router.post("/submit-upi", async (req, res) => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
-    // Save to MongoDB if available
-    try {
-      const paymentRecord = new Payment({
-        transactionId: txnId,
-        customerName: customerName.trim(),
-        customerEmail: customerEmail.trim().toLowerCase(),
-        plan,
-        amount,
-        currency: "INR",
-        paymentMethod: "Direct UPI",
-        utr: cleanUtr,
-        status: "completed",
-        activatedAt: now,
-        expiresAt,
-      });
-      await paymentRecord.save();
-
-      // Update User subscription if registered
-      if (customerEmail) {
-        await User.findOneAndUpdate(
-          { email: customerEmail.trim().toLowerCase() },
-          {
-            isSubscribed: true,
-            subscriptionPlan: plan,
-            subscriptionExpiresAt: expiresAt,
-            subscriptionTxnId: txnId,
-          }
-        );
-      }
-    } catch (dbError) {
-      console.warn("MongoDB write skipped or failed (safe fallback active):", dbError.message);
-    }
-
     return res.status(200).json({
       success: true,
-      message: "UPI Payment verified successfully! Software license activated.",
+      message: "UPI Payment verified successfully!",
       license: {
         transactionId: txnId,
         utr: cleanUtr,
@@ -103,145 +277,7 @@ router.post("/submit-upi", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error processing UPI submission:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error during verification: " + error.message,
-    });
-  }
-});
-
-// 3. CREATE RAZORPAY ORDER (Automated Gateway)
-router.post("/create-order", async (req, res) => {
-  try {
-    const { plan = "monthly" } = req.body;
-    const amount = (plan === "annual" ? 299 : 39) * 100; // in paise
-    const razorpay = getRazorpay();
-
-    if (!razorpay) {
-      return res.status(200).json({
-        hasGateway: false,
-        message: "Automated Razorpay gateway simulation active.",
-        merchantName: process.env.MERCHANT_NAME || "KUNDAN TRADING COMPANY",
-      });
-    }
-
-    const options = {
-      amount,
-      currency: "INR",
-      receipt: "rcpt_" + Date.now(),
-      payment_capture: 1,
-      notes: {
-        product: "The Study Ledger License",
-        plan,
-      },
-    };
-
-    const order = await razorpay.orders.create(options);
-    return res.status(200).json({
-      hasGateway: true,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID,
-      plan,
-    });
-  } catch (error) {
-    console.error("Razorpay order creation error:", error);
-    return res.status(500).json({
-      hasGateway: false,
-      message: "Failed to create payment order: " + error.message,
-    });
-  }
-});
-
-// 4. VERIFY RAZORPAY SIGNATURE
-router.post("/verify-razorpay", async (req, res) => {
-  try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      plan = "monthly",
-      customerName = "CA Student",
-      customerEmail = "student@studyledger.com",
-    } = req.body;
-
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Missing payment authorization parameters." });
-    }
-
-    const secret = process.env.RAZORPAY_KEY_SECRET;
-    if (!secret) {
-      return res.status(500).json({ success: false, message: "Server gateway secret is missing." });
-    }
-
-    const generatedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(razorpay_order_id + "|" + razorpay_payment_id)
-      .digest("hex");
-
-    if (generatedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Cryptographic signature mismatch. Payment verification failed." });
-    }
-
-    const amount = plan === "annual" ? 299 : 39;
-    const durationDays = plan === "annual" ? 365 : 30;
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-    const txnId = "SL-RZP-" + razorpay_payment_id;
-
-    try {
-      const paymentRecord = new Payment({
-        transactionId: txnId,
-        customerName,
-        customerEmail,
-        plan,
-        amount,
-        currency: "INR",
-        paymentMethod: "Razorpay",
-        razorpayOrderId: razorpay_order_id,
-        razorpayPaymentId: razorpay_payment_id,
-        razorpaySignature: razorpay_signature,
-        status: "completed",
-        activatedAt: now,
-        expiresAt,
-      });
-      await paymentRecord.save();
-
-      if (customerEmail) {
-        await User.findOneAndUpdate(
-          { email: customerEmail.trim().toLowerCase() },
-          {
-            isSubscribed: true,
-            subscriptionPlan: plan,
-            subscriptionExpiresAt: expiresAt,
-            subscriptionTxnId: txnId,
-          }
-        );
-      }
-    } catch (e) {
-      console.warn("Database save skipped:", e.message);
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Payment successfully verified and settled.",
-      license: {
-        transactionId: txnId,
-        paymentId: razorpay_payment_id,
-        plan,
-        amount,
-        customerName,
-        customerEmail,
-        status: "active",
-        activatedAt: now.toISOString(),
-        expiresAt: expiresAt.toISOString(),
-      },
-    });
-  } catch (error) {
-    console.error("Signature verification error:", error);
-    return res.status(500).json({ success: false, message: "Verification failed: " + error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
 

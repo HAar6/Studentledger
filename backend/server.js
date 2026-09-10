@@ -16,6 +16,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/study", studyRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api", paymentRoutes);
 
 // MongoDB Connection with timeout protection
 mongoose

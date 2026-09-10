@@ -1510,93 +1510,100 @@
         : "";
 
       try {
-        // Request order from backend
-        const response = await fetch(`${API_BASE}/api/payment/create-order`, {
+        // STEP 1: Call backend to create Razorpay order
+        const response = await fetch(`${API_BASE}/api/create-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan: selectedPlan })
+          body: JSON.stringify({
+            amount: amount * 100, // amount in paise
+            currency: "INR",
+            plan: selectedPlan,
+            receipt: "rcpt_" + Date.now().toString().slice(-8)
+          })
         });
 
         const orderData = await response.json();
 
-        // If backend has active Razorpay keys configured
-        if (orderData && orderData.hasGateway && orderData.orderId && window.Razorpay) {
+        if (!response.ok || !orderData.order_id) {
           overlay.style.display = "none";
-
-          const options = {
-            key: orderData.keyId,
-            amount: orderData.amount,
-            currency: orderData.currency || "INR",
-            name: "The Study Ledger",
-            description: (selectedPlan === "annual" ? "Annual Exam Pass" : "Monthly Pass") + " License",
-            order_id: orderData.orderId,
-            prefill: {
-              name: studentName,
-              email: studentEmail,
-              contact: studentPhone
-            },
-            notes: {
-              plan: selectedPlan,
-              studentEmail: studentEmail
-            },
-            theme: {
-              color: "#113426"
-            },
-            handler: async function (rzpResponse) {
-              overlay.style.display = "grid";
-              statusText.textContent = "Payment received! Cryptographically verifying Razorpay signature...";
-
-              try {
-                const verifyRes = await fetch(`${API_BASE}/api/payment/verify-razorpay`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    razorpay_order_id: rzpResponse.razorpay_order_id,
-                    razorpay_payment_id: rzpResponse.razorpay_payment_id,
-                    razorpay_signature: rzpResponse.razorpay_signature,
-                    plan: selectedPlan,
-                    customerName: studentName,
-                    customerEmail: studentEmail
-                  })
-                });
-
-                const verifyData = await verifyRes.json();
-                completePaymentSuccess("Razorpay Automated Gateway (" + rzpResponse.razorpay_payment_id + ")", verifyData.license || {
-                  transactionId: "RZP-" + rzpResponse.razorpay_payment_id,
-                  plan: selectedPlan,
-                  amount: amount
-                });
-              } catch (verifyErr) {
-                completePaymentSuccess("Razorpay Automated Gateway (" + rzpResponse.razorpay_payment_id + ")", {
-                  transactionId: "RZP-" + rzpResponse.razorpay_payment_id,
-                  plan: selectedPlan,
-                  amount: amount
-                });
-              }
-            },
-            modal: {
-              ondismiss: function () {
-                overlay.style.display = "none";
-              }
-            }
-          };
-
-          const rzpInstance = new window.Razorpay(options);
-          rzpInstance.on("payment.failed", function (failResp) {
-            overlay.style.display = "none";
-            alert("Payment declined: " + (failResp.error.description || "Transaction failed."));
-          });
-          rzpInstance.open();
+          alert("Could not create payment order: " + (orderData.error || orderData.message || "Server error"));
           return;
         }
 
-        // Automated Pre-deployment Verification Simulation:
-        // Demonstrates Razorpay automated settlement handshake
-        runAutomatedRazorpaySimulation(studentName, studentEmail);
+        // STEP 2: Open Razorpay Standard Checkout Modal
+        overlay.style.display = "none";
+
+        const options = {
+          key: orderData.key_id || orderData.keyId,
+          amount: orderData.amount,
+          currency: orderData.currency || "INR",
+          name: "KUNDAN TRADING COMPANY",
+          description: "The Study Ledger (" + (selectedPlan === "annual" ? "Annual Exam Pass" : "Monthly Pass") + ")",
+          image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23113325'/%3E%3Cpath d='M17 13h25a6 6 0 0 1 6 6v31H22a6 6 0 0 1-6-6V14a1 1 0 0 1 1-1Z' fill='%23fffaf0'/%3E%3Cpath d='M16 42a7 7 0 0 1 7-7h25M25 22h15M25 28h11' fill='none' stroke='%23113325' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='m27 43 5 5 10-12' fill='none' stroke='%23d49b38' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+          order_id: orderData.order_id,
+          prefill: {
+            name: studentName,
+            email: studentEmail,
+            contact: studentPhone
+          },
+          notes: {
+            product: "The Study Ledger License",
+            plan: selectedPlan,
+            studentEmail: studentEmail
+          },
+          theme: {
+            color: "#113426"
+          },
+          handler: async function (rzpResponse) {
+            // STEP 3: Send verification payload to backend
+            overlay.style.display = "grid";
+            statusText.textContent = "Payment authorized! Cryptographically verifying Razorpay signature...";
+
+            try {
+              const verifyRes = await fetch(`${API_BASE}/api/verify-payment`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: rzpResponse.razorpay_order_id,
+                  razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                  razorpay_signature: rzpResponse.razorpay_signature,
+                  plan: selectedPlan,
+                  customerName: studentName,
+                  customerEmail: studentEmail
+                })
+              });
+
+              const verifyData = await verifyRes.json();
+
+              if (verifyRes.ok && verifyData.success) {
+                completePaymentSuccess("Razorpay Standard Checkout (" + rzpResponse.razorpay_payment_id + ")", verifyData.license);
+              } else {
+                overlay.style.display = "none";
+                alert("Signature verification failed: " + (verifyData.error || "Payment signature invalid."));
+              }
+            } catch (verifyErr) {
+              overlay.style.display = "none";
+              alert("Network error during payment verification: " + verifyErr.message);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              overlay.style.display = "none";
+              console.log("Razorpay checkout closed by customer.");
+            }
+          }
+        };
+
+        const rzpInstance = new window.Razorpay(options);
+        rzpInstance.on("payment.failed", function (failResp) {
+          overlay.style.display = "none";
+          alert("Payment Failed: " + ((failResp.error && failResp.error.description) || "Transaction declined."));
+        });
+        rzpInstance.open();
 
       } catch (err) {
-        console.warn("Backend order call skipped or offline, running automated gateway simulator:", err);
-        runAutomatedRazorpaySimulation(studentName, studentEmail);
+        overlay.style.display = "none";
+        alert("Failed to connect to payment server: " + err.message);
       }
     }
 
