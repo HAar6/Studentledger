@@ -309,11 +309,27 @@
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
+        // If user is subscribed, save software_license into localStorage immediately
+        if (data.user && data.user.isSubscribed) {
+          const licenseObj = data.license || {
+            status: "active",
+            plan: data.user.subscriptionPlan || "monthly",
+            transactionId: data.user.subscriptionTxnId || ("SL-" + Date.now().toString().slice(-8)),
+            activatedAt: new Date().toISOString(),
+            expiresAt: data.user.subscriptionExpiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          };
+          localStorage.setItem("software_license", JSON.stringify(licenseObj));
+        }
+
         const licRaw = localStorage.getItem("software_license");
         let isPaid = false;
         try {
           const lic = JSON.parse(licRaw);
-          if (lic && (lic.status === "active" || lic.plan)) isPaid = true;
+          if (lic && (lic.status === "active" || lic.plan)) {
+            if (!lic.expiresAt || new Date() <= new Date(lic.expiresAt)) {
+              isPaid = true;
+            }
+          }
         } catch (e) {}
 
         if (isPaid || (data.user && data.user.isSubscribed)) {
@@ -321,7 +337,7 @@
           message.textContent = "Login successful! Opening your ledger...";
           setTimeout(() => {
             window.location.href = "index.html";
-          }, 600);
+          }, 450);
         } else {
           message.style.color = "var(--green)";
           message.textContent = "Login successful! Redirecting to checkout to activate license...";
@@ -340,7 +356,11 @@
         let isPaid = false;
         try {
           const lic = JSON.parse(licRaw);
-          if (lic && (lic.status === "active" || lic.plan)) isPaid = true;
+          if (lic && (lic.status === "active" || lic.plan)) {
+            if (!lic.expiresAt || new Date() <= new Date(lic.expiresAt)) {
+              isPaid = true;
+            }
+          }
         } catch (e) {}
 
         if (isPaid) {
@@ -348,7 +368,7 @@
           message.textContent = "Login authorized! Opening ledger...";
           setTimeout(() => {
             window.location.href = "index.html";
-          }, 600);
+          }, 450);
         } else {
           message.style.color = "var(--green)";
           message.textContent = "Login authorized! Redirecting to activate access pass...";

@@ -255,11 +255,43 @@ router.post("/submit-upi", async (req, res) => {
     }
 
     const cleanUtr = String(utr).trim();
+    const cleanEmail = customerEmail.toLowerCase().trim();
     const amount = plan === "annual" ? 299 : 39;
     const durationDays = plan === "annual" ? 365 : 30;
     const txnId = "SL-UPI-" + Date.now().toString().slice(-6) + "-" + Math.floor(1000 + Math.random() * 9000);
     const now = new Date();
     const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    // Save payment record to MongoDB
+    try {
+      const paymentRecord = new Payment({
+        transactionId: txnId,
+        customerName,
+        customerEmail: cleanEmail,
+        plan,
+        amount,
+        currency: "INR",
+        paymentMethod: "Direct UPI",
+        utr: cleanUtr,
+        status: "completed",
+        activatedAt: now,
+        expiresAt,
+      });
+      await paymentRecord.save();
+
+      // Update user subscription
+      await User.findOneAndUpdate(
+        { email: cleanEmail },
+        {
+          isSubscribed: true,
+          subscriptionPlan: plan,
+          subscriptionExpiresAt: expiresAt,
+          subscriptionTxnId: txnId,
+        }
+      );
+    } catch (dbErr) {
+      console.warn("UPI record write warning:", dbErr.message);
+    }
 
     return res.status(200).json({
       success: true,
@@ -270,7 +302,7 @@ router.post("/submit-upi", async (req, res) => {
         plan,
         amount,
         customerName,
-        customerEmail,
+        customerEmail: cleanEmail,
         status: "active",
         activatedAt: now.toISOString(),
         expiresAt: expiresAt.toISOString(),
@@ -286,16 +318,60 @@ router.get("/status/:email", async (req, res) => {
   try {
     const email = req.params.email.trim().toLowerCase();
     const user = await User.findOne({ email });
+    let isSubscribed = false;
+    let plan = "monthly";
+    let expiresAt = null;
+    let transactionId = null;
+
     if (user && user.isSubscribed) {
       const isExpired = user.subscriptionExpiresAt && new Date() > new Date(user.subscriptionExpiresAt);
-      return res.json({
-        isSubscribed: !isExpired,
-        plan: user.subscriptionPlan,
-        expiresAt: user.subscriptionExpiresAt,
-        transactionId: user.subscriptionTxnId,
-      });
+      if (!isExpired) {
+        isSubscribed = true;
+        plan = user.subscriptionPlan || "monthly";
+        expiresAt = user.subscriptionExpiresAt;
+        transactionId = user.subscriptionTxnId;
+      }
     }
-    return res.json({ isSubscribed: false });
+
+    // Cross-check Payment collection for active payments
+    if (!isSubscribed) {
+      const payment = await Payment.findOne({
+        customerEmail: email,
+        status: "completed",
+      }).sort({ createdAt: -1 });
+
+      if (payment) {
+        const paymentActive = !payment.expiresAt || new Date() <= new Date(payment.expiresAt);
+        if (paymentActive) {
+          isSubscribed = true;
+          plan = payment.plan || plan;
+          expiresAt = payment.expiresAt;
+          transactionId = payment.transactionId;
+
+          // Auto-heal User record
+          if (user) {
+            user.isSubscribed = true;
+            user.subscriptionPlan = plan;
+            user.subscriptionExpiresAt = expiresAt;
+            user.subscriptionTxnId = transactionId;
+            await user.save();
+          }
+        }
+      }
+    }
+
+    return res.json({
+      isSubscribed,
+      plan: isSubscribed ? plan : null,
+      expiresAt: isSubscribed ? expiresAt : null,
+      transactionId: isSubscribed ? transactionId : null,
+      license: isSubscribed ? {
+        status: "active",
+        plan,
+        transactionId: transactionId || ("SL-" + Date.now()),
+        expiresAt,
+      } : null,
+    });
   } catch (error) {
     return res.json({ isSubscribed: false, error: error.message });
   }

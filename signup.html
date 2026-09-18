@@ -337,12 +337,28 @@
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        message.style.color = "var(--green)";
-        message.textContent = "Account registered successfully! Redirecting to checkout (₹39/pm)...";
+        if (data.user && data.user.isSubscribed) {
+          const licenseObj = data.license || {
+            status: "active",
+            plan: data.user.subscriptionPlan || "monthly",
+            transactionId: data.user.subscriptionTxnId || ("SL-" + Date.now().toString().slice(-8)),
+            activatedAt: new Date().toISOString(),
+            expiresAt: data.user.subscriptionExpiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          };
+          localStorage.setItem("software_license", JSON.stringify(licenseObj));
 
-        setTimeout(() => {
-          window.location.href = "payment.html?plan=monthly";
-        }, 600);
+          message.style.color = "var(--green)";
+          message.textContent = "Welcome! Active subscription detected. Opening your ledger...";
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 450);
+        } else {
+          message.style.color = "var(--green)";
+          message.textContent = "Account registered successfully! Redirecting to checkout (₹39/pm)...";
+          setTimeout(() => {
+            window.location.href = "payment.html?plan=monthly";
+          }, 600);
+        }
 
       } catch (error) {
         console.warn("Backend server offline, activating client registration session:", error);

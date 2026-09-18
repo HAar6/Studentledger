@@ -1485,7 +1485,7 @@
   <script>
     "use strict";
 
-    function checkUser() {
+    async function checkUser() {
       const token = localStorage.getItem("token");
       let user = null;
       try {
@@ -1497,38 +1497,87 @@
       let isPaid = false;
       try {
         const parsed = JSON.parse(license);
-        if (parsed && (parsed.status === "active" || parsed.plan)) isPaid = true;
+        if (parsed && (parsed.status === "active" || parsed.plan)) {
+          if (!parsed.expiresAt || new Date() <= new Date(parsed.expiresAt)) {
+            isPaid = true;
+          }
+        }
       } catch (e) {}
 
-      if (token && user) {
-        if (isPaid) {
-          authSec.innerHTML = `
-            <span style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: #a9c0b2;">
-              Hi, ${user.name ? user.name.split(" ")[0] : "Student"}
-            </span>
-            <a href="index.html" class="btn amber" style="padding: 8px 14px; font-size: 11px;">Open Software →</a>
-            <button onclick="logoutNow()" class="btn alt" style="padding: 6px 10px; font-size: 10px;">Logout</button>
-          `;
+      if (!isPaid && user && user.isSubscribed) {
+        if (!user.subscriptionExpiresAt || new Date() <= new Date(user.subscriptionExpiresAt)) {
+          isPaid = true;
+          localStorage.setItem("software_license", JSON.stringify({
+            status: "active",
+            plan: user.subscriptionPlan || "monthly",
+            transactionId: user.subscriptionTxnId || ("SL-" + Date.now().toString().slice(-8)),
+            expiresAt: user.subscriptionExpiresAt
+          }));
+        }
+      }
+
+      function renderAuth(paidStatus) {
+        if (token && user) {
+          if (paidStatus) {
+            authSec.innerHTML = `
+              <span style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: #a9c0b2;">
+                Hi, ${user.name ? user.name.split(" ")[0] : "Student"}
+              </span>
+              <a href="index.html" class="btn amber" style="padding: 8px 14px; font-size: 11px;">Open Software →</a>
+              <button onclick="logoutNow()" class="btn alt" style="padding: 6px 10px; font-size: 10px;">Logout</button>
+            `;
+          } else {
+            authSec.innerHTML = `
+              <span style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: #a9c0b2;">
+                Hi, ${user.name ? user.name.split(" ")[0] : "Student"}
+              </span>
+              <a href="payment.html?plan=monthly" class="btn amber" style="padding: 8px 14px; font-size: 11px;">Subscribe (₹39/pm) →</a>
+              <button onclick="logoutNow()" class="btn alt" style="padding: 6px 10px; font-size: 10px;">Logout</button>
+            `;
+          }
         } else {
           authSec.innerHTML = `
-            <span style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: #a9c0b2;">
-              Hi, ${user.name ? user.name.split(" ")[0] : "Student"}
-            </span>
-            <a href="payment.html?plan=monthly" class="btn amber" style="padding: 8px 14px; font-size: 11px;">Subscribe (₹39/pm) →</a>
-            <button onclick="logoutNow()" class="btn alt" style="padding: 6px 10px; font-size: 10px;">Logout</button>
+            <a href="login.html" class="btn alt">Login</a>
+            <a href="signup.html" class="btn amber">Sign Up</a>
           `;
         }
-      } else {
-        authSec.innerHTML = `
-          <a href="login.html" class="btn alt">Login</a>
-          <a href="signup.html" class="btn amber">Sign Up</a>
-        `;
+      }
+
+      renderAuth(isPaid);
+
+      // Background verify subscription with server
+      if (token && user && user.email) {
+        const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
+        try {
+          const res = await fetch(`${API_BASE}/api/payment/status/${encodeURIComponent(user.email.toLowerCase().trim())}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.isSubscribed) {
+              user.isSubscribed = true;
+              user.subscriptionPlan = data.plan;
+              user.subscriptionExpiresAt = data.expiresAt;
+              user.subscriptionTxnId = data.transactionId;
+              localStorage.setItem("user", JSON.stringify(user));
+
+              localStorage.setItem("software_license", JSON.stringify({
+                status: "active",
+                plan: data.plan || "monthly",
+                transactionId: data.transactionId || ("SL-" + Date.now().toString().slice(-8)),
+                expiresAt: data.expiresAt
+              }));
+              renderAuth(true);
+            }
+          }
+        } catch (e) {}
       }
     }
 
     window.logoutNow = function() {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("software_license");
       checkUser();
     };
 

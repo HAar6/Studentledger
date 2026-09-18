@@ -10,17 +10,34 @@
       (function () {
         try {
           const licRaw = localStorage.getItem("software_license");
+          const userRaw = localStorage.getItem("user");
           let isLicensed = false;
+
           if (licRaw) {
             const lic = JSON.parse(licRaw);
             if (lic && (lic.status === "active" || lic.plan)) {
-              if (lic.expiresAt && new Date() > new Date(lic.expiresAt)) {
-                isLicensed = false;
-              } else {
+              if (!lic.expiresAt || new Date() <= new Date(lic.expiresAt)) {
                 isLicensed = true;
               }
             }
           }
+
+          // Cross-check account subscription profile from login/database
+          if (!isLicensed && userRaw) {
+            const userObj = JSON.parse(userRaw);
+            if (userObj && userObj.isSubscribed) {
+              if (!userObj.subscriptionExpiresAt || new Date() <= new Date(userObj.subscriptionExpiresAt)) {
+                isLicensed = true;
+                localStorage.setItem("software_license", JSON.stringify({
+                  status: "active",
+                  plan: userObj.subscriptionPlan || "monthly",
+                  transactionId: userObj.subscriptionTxnId || ("SL-" + Date.now().toString().slice(-8)),
+                  expiresAt: userObj.subscriptionExpiresAt
+                }));
+              }
+            }
+          }
+
           if (!isLicensed) {
             window.location.replace("payment.html?plan=monthly&notice=paywall_required");
           }
@@ -1931,12 +1948,59 @@
             }
         }
         function resetAll() {
-            if (confirm("Reset all progress, revisions, sessions and practice? Export first if needed.")) {
+            let m = document.getElementById("modal");
+            if (!m) {
+                if (confirm("⚠️ WARNING: This will permanently erase all your progress, revisions, timer logs, and practice scores. Are you sure you want to reset everything?")) {
+                    state = fresh();
+                    save();
+                    plan();
+                    render();
+                    const t = document.getElementById("toast");
+                    if (t) { t.textContent = "All Data Reset ✓"; toast(); }
+                }
+                return;
+            }
+            m.classList.remove("hidden");
+            m.innerHTML = `
+                <div class="modalbox" style="border: 2px solid var(--red); max-width: 480px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <span style="font-size:26px;line-height:1;">⚠️</span>
+                        <h3 style="color:var(--red);margin:0;font-size:20px;">Warning: Reset All Data?</h3>
+                    </div>
+                    <div style="background:#fdf2f0;border:1px solid #f1c5c0;border-left:4px solid var(--red);padding:12px 14px;border-radius:6px;margin-bottom:14px;">
+                        <p style="margin:0;color:#7e2217;font-size:13px;line-height:1.5;font-weight:600;">
+                            This action cannot be undone. You will permanently lose all progress across all 6 CA Intermediate papers.
+                        </p>
+                    </div>
+                    <ul style="margin:0 0 16px 0;padding-left:18px;font-size:12.5px;color:var(--ink);line-height:1.6;">
+                        <li>All completed topics & syllabus progress will be cleared</li>
+                        <li>All 7-interval spaced repetition schedules will reset</li>
+                        <li>All logged focus study sessions and test scores will be erased</li>
+                    </ul>
+                    <div style="background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.4;">
+                        💡 <strong>Tip:</strong> If you might need this data, click <strong>Keep My Data</strong> and download a backup via <strong>Export JSON</strong> first.
+                    </div>
+                    <div class="actions" style="justify-content:flex-end;gap:10px;">
+                        <button class="btn alt" id="cancelResetModal">Keep My Data</button>
+                        <button class="btn red" id="confirmResetModal" style="background:var(--red);color:#fff;border-color:var(--red);font-weight:700;">Yes, Permanently Reset</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("cancelResetModal").onclick = closeModal;
+            document.getElementById("confirmResetModal").onclick = () => {
+                closeModal();
                 state = fresh();
                 save();
                 plan();
                 render();
-            }
+                const t = document.getElementById("toast");
+                if (t) {
+                    t.textContent = "All Data Reset ✓";
+                    toast();
+                    setTimeout(() => { t.textContent = "Recorded ✓"; }, 1500);
+                }
+            };
         }
         document.getElementById("exportBtn").onclick = exportData;
         document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();

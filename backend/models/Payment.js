@@ -34,7 +34,7 @@ const paymentSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["Direct UPI", "Razorpay", "Card", "NetBanking"],
+      enum: ["Direct UPI", "Razorpay", "Razorpay Standard Checkout", "Card", "NetBanking"],
       required: true,
     },
     utr: {

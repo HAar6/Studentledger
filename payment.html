@@ -1208,7 +1208,17 @@
         <div class="gateway-body">
           <!-- PAYWALL NOTICE (IF ACCESSED DIRECTLY WITHOUT PAYMENT) -->
           <div id="paywallNotice" style="display: none; background: #fdf3e2; border: 1.5px solid #d49b38; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #784507; line-height: 1.5;">
-            🔒 <b>Access Pass Required:</b> Every user must activate an access pass to unlock The Study Ledger software. Complete your automated payment below to instantly activate your account.
+            <b>Access Restricted:</b> A software access pass is required to unlock The Study Ledger. Please choose a license plan below to activate your account.
+          </div>
+
+          <!-- ALREADY SUBSCRIBED NOTICE (IF USER ALREADY HAS ACTIVE SUBSCRIPTION) -->
+          <div id="alreadySubscribedNotice" style="display: none; background: #eef7f2; border: 1.5px solid #113426; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #113426; line-height: 1.5;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+              <div>
+                <strong>Active License Detected!</strong> Your account is already subscribed. You do not need to purchase again.
+              </div>
+              <a href="index.html" style="padding: 8px 16px; font-size: 12px; text-decoration: none; border-radius: 6px; background: #113426; color: #fff; font-weight: 600;">Open Study Ledger →</a>
+            </div>
           </div>
 
           <!-- RAZORPAY UNIFIED PAYMENT METHODS SHOWCASE -->
@@ -1464,6 +1474,27 @@
         }
       }
 
+      // Check if user already has an active subscription
+      try {
+        const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+        const licRaw = localStorage.getItem("software_license");
+        let hasActive = false;
+        if (licRaw) {
+          const lic = JSON.parse(licRaw);
+          if (lic && (lic.status === "active" || lic.plan) && (!lic.expiresAt || new Date() <= new Date(lic.expiresAt))) {
+            hasActive = true;
+          }
+        }
+        if (!hasActive && userObj && userObj.isSubscribed && (!userObj.subscriptionExpiresAt || new Date() <= new Date(userObj.subscriptionExpiresAt))) {
+          hasActive = true;
+        }
+
+        if (hasActive) {
+          const notice = document.getElementById("alreadySubscribedNotice");
+          if (notice) notice.style.display = "block";
+        }
+      } catch (e) {}
+
       // Pre-fill student info if logged in
       try {
         const userObj = JSON.parse(localStorage.getItem("user") || "{}");
@@ -1665,11 +1696,18 @@
       if (!localStorage.getItem("token")) {
         localStorage.setItem("token", "licensed_student_token_" + txnId);
       }
-      if (!localStorage.getItem("user")) {
-        const nameVal = (document.getElementById("studentName") && document.getElementById("studentName").value) || "CA Student";
-        const emailVal = (document.getElementById("studentEmail") && document.getElementById("studentEmail").value) || "harshity16@gmail.com";
-        localStorage.setItem("user", JSON.stringify({ name: nameVal, email: emailVal }));
-      }
+      try {
+        const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const nameVal = (document.getElementById("studentName") && document.getElementById("studentName").value) || existingUser.name || "CA Student";
+        const emailVal = (document.getElementById("studentEmail") && document.getElementById("studentEmail").value) || existingUser.email || "student@studyledger.com";
+        existingUser.name = nameVal;
+        existingUser.email = emailVal;
+        existingUser.isSubscribed = true;
+        existingUser.subscriptionPlan = selectedPlan;
+        existingUser.subscriptionExpiresAt = licenseObj.expiresAt;
+        existingUser.subscriptionTxnId = txnId;
+        localStorage.setItem("user", JSON.stringify(existingUser));
+      } catch (e) {}
 
       // Fill Receipt
       document.getElementById("receiptTxnId").textContent = txnId;

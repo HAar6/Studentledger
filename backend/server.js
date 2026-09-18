@@ -5,9 +5,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
+const path = require("path");
 const dotenv = require("dotenv");
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 
@@ -29,8 +30,6 @@ mongoose
   .catch((error) => {
     console.error("MongoDB Connection Error:", error.message);
   });
-
-const path = require("path");
 
 // Serve static frontend files (dashboard, ledger, policies, payments)
 // index: false ensures root '/' resolves to the dashboard sales landing page
