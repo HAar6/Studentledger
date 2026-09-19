@@ -1,11 +1,12 @@
 const express = require("express");
 const StudyData = require("../models/StudyData");
 const authMiddleware = require("../middleware/authMiddleware");
+const requireSubscription = require("../middleware/requireSubscription");
 
 const router = express.Router();
 
-// GET logged-in user's study data
-router.get("/", authMiddleware, async (req, res) => {
+// GET logged-in user's study data (requires active subscription)
+router.get("/", authMiddleware, requireSubscription, async (req, res) => {
   try {
     let studyData = await StudyData.findOne({
       userId: req.userId,
@@ -31,8 +32,8 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-// SAVE / UPDATE logged-in user's study data
-router.put("/", authMiddleware, async (req, res) => {
+// SAVE / UPDATE logged-in user's study data (requires active subscription)
+router.put("/", authMiddleware, requireSubscription, async (req, res) => {
   try {
     const { data } = req.body;
 

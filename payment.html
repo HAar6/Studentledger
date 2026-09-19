@@ -1638,36 +1638,6 @@
       }
     }
 
-    // Automated Razorpay simulation for testing and reviewer evaluation
-    function runAutomatedRazorpaySimulation(studentName, studentEmail) {
-      const overlay = document.getElementById("processOverlay");
-      const statusText = document.getElementById("processStatusText");
-      overlay.style.display = "grid";
-
-      const stages = [
-        "Opening encrypted Razorpay secure checkout handshake...",
-        "Authorizing token with banking switch...",
-        "Cryptographic payment signature validated by Razorpay...",
-        "Payment verified! Activating Study Ledger software license..."
-      ];
-
-      let idx = 0;
-      const timer = setInterval(() => {
-        idx++;
-        if (idx < stages.length) {
-          statusText.textContent = stages[idx];
-        } else {
-          clearInterval(timer);
-          const generatedPaymentId = "pay_" + Math.random().toString(36).substring(2, 11).toUpperCase();
-          completePaymentSuccess("Razorpay Automated Checkout", {
-            transactionId: "RZP-" + generatedPaymentId,
-            customerName: studentName,
-            customerEmail: studentEmail
-          });
-        }
-      }, 450);
-    }
-
     // Handle completed payment and activate software
     function completePaymentSuccess(methodName, licenseData) {
       const overlay = document.getElementById("processOverlay");
@@ -1724,10 +1694,6 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       initPlanDetails();
-
-      if (urlParams.get("preview") === "success") {
-        completePaymentSuccess("Razorpay Automated Checkout");
-      }
     });
   </script>
 </body>
